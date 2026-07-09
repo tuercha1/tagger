@@ -4,11 +4,15 @@ from __future__ import annotations
 import json
 import sqlite3
 import string
+import subprocess
+import sys
 import threading
+import time
 import urllib.error
 import urllib.request
 import uuid
 import zlib
+from collections import Counter
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -32,6 +36,79 @@ IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 CONFIG_LOCK = threading.Lock()
 BATCH_TRANSLATE_SIZE = 100
 DB_LOOKUP_BATCH_SIZE = 500
+ANSI_RESET = "\033[0m"
+ANSI_INFO = "\033[96m"
+ANSI_OK = "\033[92m"
+ANSI_RUN = "\033[95m"
+ANSI_WARN = "\033[93m"
+ANSI_ERR = "\033[91m"
+_VRAM_CACHE = {"text": "显存 N/A", "time": 0.0}
+_LOG_LOCK = threading.Lock()
+_DYNAMIC_LINE = False
+
+
+def _log_text(label: str, text: str = "", color: str = ANSI_INFO) -> str:
+    msg = f"{color}[{label}]{ANSI_RESET}"
+    if text:
+        msg += f" {text}"
+    return msg
+
+
+def _op(label: str, text: str = "", color: str = ANSI_INFO) -> None:
+    global _DYNAMIC_LINE
+    with _LOG_LOCK:
+        if _DYNAMIC_LINE:
+            sys.stdout.write("\r\033[2K")
+            _DYNAMIC_LINE = False
+        print(_log_text(label, text, color), flush=True)
+
+
+def _op_live(label: str, text: str = "", color: str = ANSI_INFO) -> None:
+    global _DYNAMIC_LINE
+    with _LOG_LOCK:
+        sys.stdout.write("\r\033[2K" + _log_text(label, text, color))
+        sys.stdout.flush()
+        _DYNAMIC_LINE = True
+
+
+def _name(path: str | Path) -> str:
+    p = Path(path)
+    return p.name or str(p)
+
+
+def _vram() -> str:
+    now = time.monotonic()
+    if now - _VRAM_CACHE["time"] < 2:
+        return _VRAM_CACHE["text"]
+    try:
+        result = subprocess.run(
+            [
+                "nvidia-smi",
+                "--query-gpu=memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=1,
+            check=True,
+        )
+        rows = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+        if rows:
+            used = 0
+            total = 0
+            for row in rows:
+                parts = [x.strip() for x in row.split(",")]
+                if len(parts) >= 2:
+                    used += int(parts[0])
+                    total += int(parts[1])
+            text = f"显存 {used}/{total} MB" if total else "显存 N/A"
+        else:
+            text = "显存 N/A"
+    except Exception:
+        text = "显存 N/A"
+    _VRAM_CACHE["text"] = text
+    _VRAM_CACHE["time"] = now
+    return text
 
 
 def _load_config() -> dict:
@@ -302,6 +379,7 @@ def model_add(req: AddModelReq):
         cfg["models"].append({"id": mid, "name": name, "dir": str(md)})
     cfg["active"] = mid
     _save_config(cfg)
+    _op("模型", f"添加 {name}", ANSI_OK)
     threading.Thread(target=_load_model, args=(mid, name, str(md)), daemon=True).start()
     return {"ok": True, "model": {"id": mid, "name": name, "dir": str(md)}, "loading": True}
 
@@ -319,6 +397,7 @@ def model_switch(req: SwitchModelReq):
         raise HTTPException(status_code=404, detail="模型不存在")
     cfg["active"] = target["id"]
     _save_config(cfg)
+    _op("模型", f"切换 {target['name']}", ANSI_OK)
     threading.Thread(
         target=_load_model, args=(target["id"], target["name"], target["dir"]), daemon=True
     ).start()
@@ -329,6 +408,7 @@ def model_switch(req: SwitchModelReq):
 def model_delete(model_id: str):
     """删除模型。"""
     cfg = _load_config()
+    target = next((m for m in cfg["models"] if m.get("id") == model_id), None)
     cfg["models"] = [m for m in cfg["models"] if m["id"] != model_id]
     if cfg["active"] == model_id:
         cfg["active"] = ""
@@ -343,6 +423,7 @@ def model_delete(model_id: str):
             _active_id = ""
             _active_name = ""
             _active_dir = ""
+    _op("模型", f"删除 {(target or {}).get('name', model_id)}", ANSI_WARN)
     return {"ok": True, "models": _models_public(cfg)}
 
 
@@ -371,6 +452,7 @@ def browse(path: str = Query("")):
 @app.get("/api/workspace")
 def get_workspace():
     """取工作目录。"""
+    _op("工作区", "读取")
     cfg = _load_config()
     return {"path": cfg.get("default_workspace", "")}
 
@@ -385,6 +467,7 @@ def set_workspace(req: WorkspaceReq):
     cfg = _load_config()
     cfg["default_workspace"] = req.path
     _save_config(cfg)
+    _op("工作区", f"设置 {_name(req.path)}", ANSI_OK)
     return {"ok": True}
 
 
@@ -403,6 +486,7 @@ def workspace_folders(path: str = Query(None)):
         d = Path(ws)
         if not d.is_dir():
             return {"folders": [], "workspace": ws}
+    _op("工作区", _name(d))
     folders = []
     # 子文件夹统计
     try:
@@ -427,6 +511,7 @@ def scan(folder: str = Query(...), recursive: bool = Query(False)):
     d = Path(folder)
     if not d.is_dir():
         raise HTTPException(status_code=404, detail="文件夹不存在")
+    _op("扫描", _name(d))
     images = _list_images(d, recursive)
     items = []
     for p in images:
@@ -468,6 +553,7 @@ def serve_image(path: str = Query(...)):
         raise HTTPException(status_code=404, detail="文件不存在")
     if p.suffix.lower() not in IMAGE_EXTENSIONS:
         raise HTTPException(status_code=400, detail="不是支持的图片文件")
+    _op("图片", p.name)
     return FileResponse(str(p))
 
 
@@ -475,6 +561,7 @@ def serve_image(path: str = Query(...)):
 @app.get("/api/tags")
 def get_tags(path: str = Query(...)):
     p = Path(path)
+    _op("标签", p.name)
     txt = p.with_suffix(".txt")
     if not txt.exists():
         return {"tags": [], "raw": ""}
@@ -496,6 +583,7 @@ def save_tags(req: SaveTagsReq):
     p = Path(req.path)
     if not p.is_file():
         raise HTTPException(status_code=404, detail="图片不存在")
+    _op("保存", p.name, ANSI_OK)
     txt = p.with_suffix(".txt")
     cleaned = _dedupe(req.tags)
     if not cleaned:
@@ -515,8 +603,6 @@ class TagStatsReq(BaseModel):
 @app.post("/api/tags/stats")
 def tag_stats(req: TagStatsReq):
     """统计标签。"""
-    from collections import Counter
-
     counter: Counter = Counter()
     image_tags: dict[str, list[str]] = {}
     for path_str in req.paths:
@@ -536,8 +622,10 @@ def tag_single(path: str = Query(...), top_n: int = Query(60)):
     p = Path(path)
     if not p.is_file():
         raise HTTPException(status_code=404, detail="图片不存在")
+    _op("识别", f"{p.name} | {_vram()}", ANSI_RUN)
     top_n = min(max(top_n, 1), 500)
     candidates = tagger.tag_candidates(p, top_n=top_n)
+    _op("识别", f"完成 {p.name} | {_vram()}", ANSI_OK)
     return {"candidates": candidates}
 
 
@@ -561,16 +649,20 @@ class TagSelectedReq(BaseModel):
 def tag_selected(req: TagSelectedReq):
     """选图打标。"""
     tagger = get_tagger()
+    _op_live("打标", f"0/{len(req.paths)} | {_vram()}", ANSI_RUN)
     prefix_tags = [x.strip() for x in req.prefix.split(",") if x.strip()] if req.prefix else []
     trigger = req.trigger.strip()
 
     def event_stream() -> Iterator[str]:
         total = len(req.paths)
         done = 0
+        failed = 0
         for i, path_str in enumerate(req.paths):
             p = Path(path_str)
             try:
                 if not p.is_file():
+                    failed += 1
+                    _op_live("打标", f"{i + 1}/{total} {p.name} 失败 | {_vram()}", ANSI_ERR)
                     yield _sse({"type": "error", "index": i + 1, "total": total,
                                 "name": p.name, "error": "文件不存在"})
                     continue
@@ -578,10 +670,12 @@ def tag_selected(req: TagSelectedReq):
                 if txt.exists() and not req.overwrite:
                     existing = _read_tags_file(txt)
                     done += 1
+                    _op_live("打标", f"{i + 1}/{total} {p.name} 跳过 | {_vram()}", ANSI_WARN)
                     yield _sse({"type": "progress", "index": i + 1, "total": total,
                                 "path": path_str, "name": p.name,
                                 "tags": existing, "skipped": True})
                     continue
+                _op_live("打标", f"{i + 1}/{total} {p.name} | {_vram()}", ANSI_RUN)
                 model_tags = tagger.tag_image(
                     p,
                     general_threshold=req.general_threshold,
@@ -600,12 +694,19 @@ def tag_selected(req: TagSelectedReq):
                 output.extend([t["name"] for t in model_tags])
                 final = _dedupe(output)
                 done += 1
+                _op_live("打标", f"{i + 1}/{total} 完成 {p.name} | {_vram()}", ANSI_OK)
                 yield _sse({"type": "progress", "index": i + 1, "total": total,
                             "path": path_str, "name": p.name,
                             "tags": final, "tag_probs": tag_probs, "skipped": False})
             except Exception as e:  # noqa: BLE001
+                failed += 1
+                _op_live("打标", f"{i + 1}/{total} {p.name} 失败 | {_vram()}", ANSI_ERR)
                 yield _sse({"type": "error", "index": i + 1, "total": total,
                             "name": p.name, "error": str(e)})
+        if failed:
+            _op("打标", f"完成 {done}/{total}，失败 {failed} | {_vram()}", ANSI_WARN)
+        else:
+            _op("打标", f"完成 {done}/{total} | {_vram()}", ANSI_OK)
         yield _sse({"type": "done", "total": total, "done": done})
 
     return StreamingResponse(event_stream(), media_type="text/event-stream",
@@ -653,6 +754,7 @@ NO_KEY_PROVIDERS = {"ollama"}
 
 DEFAULT_TRANSLATE_PROMPT = (
     "你是一个翻译助手。请将以下Stable Diffusion标签从英文翻译为简体中文。"
+    "@后的英文不用翻译,但是依旧要按格式输出,"
     "每行一个标签，输出格式为\"英文|中文\"。只输出翻译结果，不要解释："
 )
 
@@ -1046,6 +1148,7 @@ def _translate_and_store_batches(
                     translations[en] = zh
                     _store_translation(conn, en, zh, source="ai")
                     _push_progress(en, zh, "translated")
+                    _op_live("翻译", f"{len(translations)}/{len(tags)}", ANSI_RUN)
                 conn.commit()
             except TranslationCancelled:
                 break
@@ -1155,6 +1258,9 @@ def get_translate_config():
 @app.post("/api/translate/config")
 def save_translate_config(req: dict):
     _save_translate_config(req)
+    provider = str(req.get("provider", "")).strip() or "unknown"
+    model = str(req.get("model", "")).strip() or "unknown"
+    _op("翻译配置", f"{provider} / {model}", ANSI_OK)
     return {"ok": True}
 
 
@@ -1199,7 +1305,9 @@ def translate_tags(req: TranslateReq):
     cfg = _load_translate_config()
     tags = _clean_tag_list(req.tags)
     if not tags:
+        _op("翻译", "无内容", ANSI_WARN)
         return {"translations": {}}
+    _op("翻译", f"{len(tags)} 词", ANSI_RUN)
     _translate_cancel.clear()  # 重置取消
     with _translate_progress_lock:
         _translate_progress.clear()
@@ -1211,15 +1319,26 @@ def translate_tags(req: TranslateReq):
 
     missing = [tag for tag in tags if tag not in cached]
     if missing and cfg["provider"] not in NO_KEY_PROVIDERS and not cfg["api_key"]:
+        _op("翻译", "失败：API 密钥", ANSI_ERR)
         raise HTTPException(status_code=400, detail="未配置 API 密钥，请先在翻译设置中填写")
 
-    new_translations = (
-        _translate_and_store_batches(missing, cfg, raise_first_error=True)
-        if missing
-        else {}
-    )
+    if not missing:
+        _op("翻译", f"无需翻译，缓存 {len(cached)}", ANSI_OK)
+        new_translations = {}
+    else:
+        try:
+            new_translations = _translate_and_store_batches(missing, cfg, raise_first_error=True)
+        except Exception:
+            _op("翻译", "失败", ANSI_ERR)
+            raise
     all_translations = {**cached, **new_translations}
     still_missing = [tag for tag in missing if tag not in new_translations]
+    if _translate_cancel.is_set():
+        _op("翻译", f"已取消，成功 {len(new_translations)}，失败 {len(still_missing)}", ANSI_WARN)
+    elif still_missing:
+        _op("翻译", f"完成，成功 {len(new_translations)}，失败 {len(still_missing)}", ANSI_WARN)
+    elif new_translations:
+        _op("翻译", f"成功 {len(new_translations)}", ANSI_OK)
     return {
         "translations": all_translations,
         "cached": len(cached),
@@ -1253,6 +1372,7 @@ def lookup_translation_cache(req: CacheLookupReq):
     tags = _clean_tag_list(req.tags)
     if not tags:
         return {"translations": {}, "missing": [], "count": 0, "missing_count": 0}
+    _op("词库", f"查 {len(tags)}", ANSI_INFO)
     with _connect_db() as conn:
         translations = _lookup_translations(conn, tags, increment_hits=True)
     missing = [tag for tag in tags if tag not in translations]
@@ -1264,10 +1384,119 @@ def lookup_translation_cache(req: CacheLookupReq):
     }
 
 
+def _translation_item(row: tuple) -> dict:
+    en, zh, source, hit_count, created_at, updated_at = row
+    return {
+        "en": en,
+        "zh": zh,
+        "source": source,
+        "hit_count": hit_count,
+        "created_at": created_at,
+        "updated_at": updated_at,
+    }
+
+
+@app.get("/api/translate/cache/all")
+def get_translation_cache_all(
+    initial: str = Query("", description="a-z 或 other"),
+    limit: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0),
+    q: str = Query("", description="搜索"),
+):
+    """全量词库。"""
+    initial = initial.strip().lower()
+    if initial and (initial != "other" and (len(initial) != 1 or initial not in string.ascii_lowercase)):
+        raise HTTPException(status_code=400, detail="initial 只能是 a-z 或 other")
+    where = ""
+    params: list = []
+    if initial == "other":
+        where = "WHERE lower(substr(en, 1, 1)) NOT BETWEEN 'a' AND 'z'"
+    elif initial:
+        where = "WHERE lower(en) LIKE ?"
+        params.append(f"{initial}%")
+    if q:
+        q_lower = q.lower()
+        if where:
+            where += " AND (lower(en) LIKE ? OR lower(zh) LIKE ?)"
+        else:
+            where = "WHERE (lower(en) LIKE ? OR lower(zh) LIKE ?)"
+        params.extend([f"%{q_lower}%", f"%{q_lower}%"])
+    sql = (
+        "SELECT en, zh, source, hit_count, created_at, updated_at "
+        f"FROM translations {where} ORDER BY lower(en), en"
+    )
+    if limit:
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
+    _op("词库", initial or "全部", ANSI_INFO)
+    with _connect_db() as conn:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM translations {where}",
+            params[:len(params)-2] if limit else params,
+        ).fetchone()[0]
+        rows = conn.execute(sql, params).fetchall()
+    return {"items": [_translation_item(row) for row in rows], "total": total}
+
+
+@app.get("/api/translate/cache/frequency")
+def get_workspace_tag_frequency(
+    workspace: str = Query(""),
+    limit: int = Query(0, ge=0),
+    offset: int = Query(0, ge=0),
+    q: str = Query("", description="搜索"),
+):
+    """标签频次。"""
+    if workspace:
+        root = Path(workspace)
+    else:
+        ws = _load_config().get("default_workspace", "")
+        if not ws:
+            raise HTTPException(status_code=400, detail="未设置工作目录")
+        root = Path(ws)
+    if not root.is_dir():
+        raise HTTPException(status_code=404, detail="工作目录不存在")
+    _op("频次", _name(root), ANSI_RUN)
+    counter: Counter[str] = Counter()
+    total_files = 0
+    total_tags = 0
+    try:
+        for txt in root.rglob("*.txt"):
+            if not txt.is_file():
+                continue
+            tags = _read_tags_file(txt)
+            if not tags:
+                continue
+            total_files += 1
+            total_tags += len(tags)
+            counter.update(tags)
+    except (PermissionError, OSError) as e:
+        raise HTTPException(status_code=500, detail=f"扫描失败: {e}")
+    items = [
+        {"en": en, "count": count}
+        for en, count in sorted(counter.items(), key=lambda x: (-x[1], x[0].lower()))
+    ]
+    if q:
+        q_lower = q.lower()
+        items = [it for it in items if q_lower in it["en"].lower()]
+    total = len(items)
+    if limit:
+        items = items[offset:offset + limit]
+    return {
+        "workspace": str(root),
+        "items": items,
+        "frequencies": dict(counter),
+        "total_files": total_files,
+        "total_tags": total_tags,
+        "total_unique": len(counter),
+        "total": total,
+    }
+
+
 @app.post("/api/translate/cache")
 def update_translation_cache(req: CacheUpdateReq):
     """保存词库。"""
     source = req.source if req.source in {"ai", "import", "manual"} else "manual"
+    _op("词库", f"存 {len(req.translations)}", ANSI_OK)
     with _connect_db() as conn:
         for en, zh in req.translations.items():
             _store_translation(conn, en, zh, source=source)
@@ -1302,17 +1531,7 @@ def list_translation_cache(q: str = "", page: int = 1, size: int = 50):
                 (size, offset),
             ).fetchall()
     return {
-        "items": [
-            {
-                "en": en,
-                "zh": zh,
-                "source": source,
-                "hit_count": hit_count,
-                "created_at": created_at,
-                "updated_at": updated_at,
-            }
-            for en, zh, source, hit_count, created_at, updated_at in rows
-        ],
+        "items": [_translation_item(row) for row in rows],
         "total": total,
         "page": page,
         "size": size,
@@ -1331,6 +1550,7 @@ def delete_translation(en: str = Query(..., description="要删除的英文标�
     with _connect_db() as conn:
         conn.execute("DELETE FROM translations WHERE en = ?", (en,))
         count = conn.execute("SELECT COUNT(*) FROM translations").fetchone()[0]
+    _op("词库", f"删 {en}", ANSI_WARN)
     return {"ok": True, "count": count}
 
 
@@ -1342,6 +1562,7 @@ def edit_translation(req: CacheEditReq):
     new_zh = req.new_zh.strip()
     if not new_en or not new_zh:
         raise HTTPException(status_code=400, detail="英文和中文都不能为空")
+    _op("词库", f"改 {new_en}", ANSI_OK)
     with _connect_db() as conn:
         if old_en == new_en:
             # 改中文
@@ -1392,6 +1613,7 @@ def translate_workspace_tags():
         existing = _lookup_translations(conn, sorted_tags, increment_hits=True)
     untranslated = [tag for tag in sorted_tags if tag not in existing]
     if not untranslated:
+        _op("翻译", f"无需翻译，缓存 {len(existing)}", ANSI_OK)
         return {
             "ok": True,
             "total_images": len(txt_files),
@@ -1412,6 +1634,13 @@ def translate_workspace_tags():
     # 统计词库
     with _connect_db() as conn:
         db_total = conn.execute("SELECT COUNT(*) FROM translations").fetchone()[0]
+    still_missing = len(untranslated) - len(new_translations)
+    if _translate_cancel.is_set():
+        _op("翻译", f"已取消，成功 {len(new_translations)}，失败 {still_missing}", ANSI_WARN)
+    elif still_missing:
+        _op("翻译", f"完成，成功 {len(new_translations)}，失败 {still_missing}", ANSI_WARN)
+    else:
+        _op("翻译", f"成功 {len(new_translations)}", ANSI_OK)
     return {
         "ok": True,
         "total_images": len(txt_files),
@@ -1500,6 +1729,7 @@ def export_translation_cache():
     ]
     data = _serialize_dict(entries)
     filename = f"tagdict_{datetime.now().strftime('%Y%m%d_%H%M%S')}.tagdict"
+    _op("词库", f"导出 {len(entries)}", ANSI_OK)
     return Response(
         content=data,
         media_type="application/octet-stream",
@@ -1527,6 +1757,7 @@ async def import_translation_cache(
     entries = obj.get("entries", [])
     if not entries:
         raise HTTPException(status_code=400, detail="词库文件中没有有效条目")
+    _op("词库", f"导入 {mode} {len(entries)}", ANSI_RUN)
     backup_path = _backup_translation_db("import")
     added = 0
     skipped = 0
@@ -1560,6 +1791,7 @@ async def import_translation_cache(
                 else:
                     skipped += 1
         total = conn.execute("SELECT COUNT(*) FROM translations").fetchone()[0]
+    _op("词库", f"导入完成 +{added} 跳过 {skipped}", ANSI_OK)
     return {
         "ok": True,
         "added": added,
@@ -1573,4 +1805,5 @@ async def import_translation_cache(
 # 前端
 @app.get("/")
 def index():
+    _op("页面", "打开", ANSI_OK)
     return FileResponse(FRONTEND_DIR / "index.html")

@@ -14,6 +14,8 @@ translations.db
 *.log
 *.err
 *.bak
+*.db-wal
+*.db-shm
 
 .DS_Store
 Thumbs.db

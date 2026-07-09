@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
@@ -16,19 +16,24 @@
         display: none;
       }
       :root {
-        --bg: #0c0c0e;
-        --bg2: #111114;
-        --bg3: #16161a;
-        --border: #2a2a32;
-        --border2: #44444e;
-        --text: #f0f0f5;
-        --text2: #9a9aae;
-        --text3: #6a6a7e;
-        --accent: #8cb8f0;
-        --accent-dim: #4a6a9a;
-        --green: #8cc88c;
-        --red: #e07878;
-        --orange: #e0b878;
+        --bg: #1c1c1e;
+        --bg2: #1c1c1e;
+        --bg3: #2c2c2e;
+        --border: transparent;
+        --border2: rgba(255, 255, 255, 0.08);
+        --text: #f2f2f7;
+        --text2: #98989f;
+        --text3: #636366;
+        --accent: #5577cc;
+        --accent-dim: #4466bb;
+        --green: #30d158;
+        --red: #ff453a;
+        --orange: #ff9f0a;
+        --sl: rgba(58, 58, 60, 0.4);
+        --sd: rgba(0, 0, 0, 0.45);
+        --sl2: rgba(58, 58, 60, 0.5);
+        --sd2: rgba(0, 0, 0, 0.55);
+        --sep: rgba(255, 255, 255, 0.06);
       }
       body {
         font-family: "Segoe UI", "Helvetica Neue", "Microsoft YaHei", sans-serif;
@@ -37,7 +42,9 @@
         height: 100vh;
         overflow: hidden;
         letter-spacing: 0.02em;
+        font-weight: 500;
       }
+
       #app {
         display: flex;
         flex-direction: column;
@@ -49,14 +56,16 @@
         align-items: center;
         gap: 12px;
         padding: 0 20px;
-        height: 48px;
+        height: 56px;
         background: var(--bg);
-        border-bottom: 1px solid var(--border);
+        box-shadow: 4px 4px 10px var(--sd), -4px -4px 10px var(--sl);
         flex-shrink: 0;
+        border-radius: 0 0 16px 16px;
+        margin-bottom: 2px;
       }
       .topbar h1 {
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         white-space: nowrap;
         letter-spacing: 0.08em;
         text-transform: uppercase;
@@ -67,8 +76,10 @@
         align-items: center;
         gap: 6px;
         font-size: 13px;
-        padding: 3px 8px;
-        border: 1px solid var(--border);
+        padding: 4px 10px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 5px var(--sd), inset -2px -2px 5px var(--sl);
+        border-radius: 8px;
         max-width: 240px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -77,19 +88,21 @@
         letter-spacing: 0.04em;
       }
       .model-select {
-        padding: 4px 8px;
-        background: transparent;
-        border: 1px solid var(--border);
+        padding: 6px 12px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 5px var(--sd), inset -2px -2px 5px var(--sl);
+        border: none;
+        border-radius: 8px;
         color: var(--text);
         font-size: 13px;
         font-family: inherit;
         max-width: 200px;
         cursor: pointer;
         letter-spacing: 0.03em;
-        transition: border-color 0.15s;
+        transition: box-shadow 0.2s ease;
       }
       .model-select:hover {
-        border-color: var(--border2);
+        box-shadow: inset 3px 3px 6px var(--sd), inset -3px -3px 6px var(--sl);
       }
 
       .body {
@@ -100,10 +113,12 @@
       .sidebar {
         width: 320px;
         background: var(--bg);
-        border-right: 1px solid var(--border);
+        box-shadow: 4px 0 10px var(--sd), -4px 0 10px var(--sl);
         padding: 16px;
         overflow-y: auto;
         flex-shrink: 0;
+        border-radius: 0 16px 16px 0;
+        margin-right: 2px;
       }
       .main {
         flex: 1;
@@ -118,23 +133,25 @@
         display: block;
         font-size: 13px;
         color: var(--text2);
-        margin-bottom: 5px;
+        margin-bottom: 6px;
         letter-spacing: 0.05em;
       }
       input[type="text"],
       input[type="number"] {
         width: 100%;
-        padding: 7px 10px;
-        background: transparent;
-        border: 1px solid var(--border);
+        padding: 8px 12px;
+        background: var(--bg);
+        border: none;
+        border-radius: 8px;
+        box-shadow: inset 3px 3px 6px var(--sd), inset -3px -3px 6px var(--sl);
         color: var(--text);
         font-size: 14px;
-        transition: border-color 0.15s;
+        transition: box-shadow 0.2s ease;
       }
       input[type="text"]:focus,
       input[type="number"]:focus {
         outline: none;
-        border-color: var(--accent);
+        box-shadow: inset 4px 4px 8px var(--sd), inset -4px -4px 8px var(--sl);
       }
       .row {
         display: flex;
@@ -142,6 +159,39 @@
       }
       .row > * {
         flex: 1;
+      }
+      input[type="checkbox"] {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 18px;
+        height: 18px;
+        border: none;
+        border-radius: 6px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+        cursor: pointer;
+        flex-shrink: 0;
+        position: relative;
+        margin: 0;
+        transition: box-shadow 0.2s ease;
+      }
+      input[type="checkbox"]:hover {
+        box-shadow: inset 3px 3px 5px var(--sd), inset -3px -3px 5px var(--sl);
+      }
+      input[type="checkbox"]:checked {
+        box-shadow: inset 3px 3px 5px var(--sd), inset -3px -3px 5px var(--sl);
+      }
+      input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -55%);
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 4px 5px 4px;
+        border-color: transparent transparent var(--red) transparent;
       }
       .check {
         display: flex;
@@ -155,10 +205,48 @@
       .check:hover {
         color: var(--text);
       }
-      .check input {
-        width: 14px;
-        height: 14px;
-        accent-color: var(--accent);
+      .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text2);
+        cursor: pointer;
+        user-select: none;
+        margin-bottom: 8px;
+        transition: color 0.2s ease;
+      }
+      .toggle-row:hover {
+        color: var(--text);
+      }
+      .ios-switch {
+        width: 44px;
+        height: 26px;
+        border-radius: 13px;
+        background: var(--bg3);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+        position: relative;
+        transition: background 0.2s ease;
+        flex-shrink: 0;
+      }
+      .ios-knob {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        transition: left 0.2s ease;
+      }
+      .ios-switch.on {
+        background: var(--accent);
+      }
+      .ios-switch.on .ios-knob {
+        left: 21px;
       }
       .range-row {
         display: flex;
@@ -169,56 +257,57 @@
         -webkit-appearance: none;
         appearance: none;
         flex: 1;
-        height: 14px;
-        background: transparent;
+        height: 8px;
+        border-radius: 4px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
         cursor: pointer;
         outline: none;
         padding: 0;
         margin: 0;
       }
       .range-row input[type="range"]::-webkit-slider-runnable-track {
-        height: 2px;
-        background: linear-gradient(
-          to right,
-          var(--accent) 0%,
-          var(--accent) var(--pct, 50%),
-          var(--border2) var(--pct, 50%),
-          var(--border2) 100%
-        );
+        height: 8px;
+        border-radius: 4px;
+        background: transparent;
       }
       .range-row input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 2px;
-        height: 14px;
-        background: var(--accent);
-        margin-top: -6px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        margin-top: -5px;
         cursor: pointer;
+        transition: box-shadow 0.2s ease;
       }
       .range-row input[type="range"]:hover::-webkit-slider-thumb {
-        height: 18px;
-        margin-top: -8px;
-        background: var(--text);
+        box-shadow: 3px 3px 6px var(--sd), -3px -3px 6px var(--sl);
       }
       .range-row input[type="range"]::-moz-range-track {
-        height: 2px;
-        background: var(--border2);
+        height: 8px;
+        border-radius: 4px;
+        background: transparent;
       }
       .range-row input[type="range"]::-moz-range-progress {
-        height: 2px;
+        height: 8px;
+        border-radius: 4px;
         background: var(--accent);
+        opacity: 0.3;
       }
       .range-row input[type="range"]::-moz-range-thumb {
-        width: 2px;
-        height: 14px;
-        background: var(--accent);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
         border: none;
-        border-radius: 0;
         cursor: pointer;
       }
       .range-row input[type="range"]:hover::-moz-range-thumb {
-        height: 18px;
-        background: var(--text);
+        box-shadow: 3px 3px 6px var(--sd), -3px -3px 6px var(--sl);
       }
       .range-row .val {
         width: 42px;
@@ -230,60 +319,69 @@
       }
 
       button {
-        padding: 7px 12px;
-        border: 1px solid var(--border);
-        border-radius: 0;
+        padding: 8px 14px;
+        border: none;
+        border-radius: 8px;
         font-size: 14px;
         cursor: pointer;
         font-family: inherit;
-        background: transparent;
+        background: var(--bg);
         color: var(--text);
         letter-spacing: 0.03em;
-        transition: border-color 0.15s, color 0.15s, background 0.15s;
+        box-shadow: 5px 5px 10px var(--sd), -5px -5px 10px var(--sl);
+        font-weight: 500;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+      }
+      button:hover {
+        box-shadow: 7px 7px 14px var(--sd2), -7px -7px 14px var(--sl2);
+        transform: translateY(-2px);
+      }
+      button:active {
+        box-shadow: inset 4px 4px 8px var(--sd), inset -4px -4px 8px var(--sl);
+        transform: translateY(0) scale(0.98);
       }
       .btn {
-        border: 1px solid var(--border);
         color: var(--text);
       }
-      .btn:hover {
-        border-color: var(--border2);
-      }
       .btn-primary {
-        border: 1px solid var(--accent-dim);
         color: var(--accent);
-      }
-      .btn-primary:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-        background: rgba(106, 154, 214, 0.06);
+        font-weight: 500;
       }
       .btn-primary:disabled {
-        border-color: var(--border);
         color: var(--text3);
         cursor: not-allowed;
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .btn-primary:disabled:hover {
-        background: transparent;
+        transform: none;
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .btn-sm {
-        padding: 4px 8px;
+        padding: 5px 10px;
         font-size: 13px;
+        border-radius: 6px;
+        box-shadow: 3px 3px 6px var(--sd), -3px -3px 6px var(--sl);
+      }
+      .btn-sm:hover {
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+      }
+      .btn-sm:active {
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .btn-ghost {
-        border: 1px solid var(--border);
         color: var(--text2);
+        box-shadow: 3px 3px 6px var(--sd), -3px -3px 6px var(--sl);
       }
       .btn-ghost:hover {
         color: var(--text);
-        border-color: var(--border2);
       }
       .btn-danger {
-        border: 1px solid var(--red);
         color: var(--red);
-        background: transparent;
       }
       .btn-danger:hover {
-        background: rgba(196, 90, 90, 0.08);
+        box-shadow: 5px 5px 10px rgba(196, 112, 112, 0.3),
+          -5px -5px 10px var(--sl2);
       }
       .btn-block {
         width: 100%;
@@ -296,41 +394,44 @@
         letter-spacing: 0.15em;
         margin: 20px 0 10px;
         padding-bottom: 6px;
-        border-bottom: 1px dashed var(--border);
+        border-bottom: 1px solid var(--sep);
       }
       .section-title:first-child {
         margin-top: 0;
       }
 
       .progress-bar {
-        height: 2px;
-        background: var(--bg3);
+        height: 6px;
+        border-radius: 3px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
         border: none;
         overflow: hidden;
       }
       .progress-bar > div {
         height: 100%;
         background: var(--accent);
-        transition: width 0.2s;
+        border-radius: 3px;
+        transition: width 0.2s ease;
       }
 
       .grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-        gap: 1px;
-        background: var(--border);
-        border: 1px solid var(--border);
+        gap: 12px;
       }
       .card {
         background: var(--bg);
-        border: none;
+        border-radius: 14px;
         overflow: hidden;
         cursor: pointer;
-        transition: background 0.15s;
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
         position: relative;
+        box-shadow: 6px 6px 12px var(--sd), -6px -6px 12px var(--sl);
       }
       .card:hover {
-        background: var(--bg2);
+        box-shadow: 9px 9px 18px var(--sd2), -9px -9px 18px var(--sl2);
+        transform: translateY(-3px);
       }
       .card img {
         width: 100%;
@@ -338,15 +439,10 @@
         object-fit: cover;
         display: block;
         background: var(--bg3);
-        opacity: 0.9;
-        transition: opacity 0.15s;
-      }
-      .card:hover img {
-        opacity: 1;
+        border-radius: 14px 14px 0 0;
       }
       .card .info {
-        padding: 6px 8px;
-        border-top: 1px solid var(--border);
+        padding: 8px 10px;
       }
       .card .name {
         font-size: 13px;
@@ -364,21 +460,24 @@
       .tag-pill {
         display: inline-block;
         font-size: 11px;
-        padding: 1px 6px;
-        border: 1px solid var(--green);
+        padding: 2px 8px;
+        border-radius: 10px;
         color: var(--green);
+        background: var(--bg);
+        box-shadow: inset 1px 1px 3px var(--sd), inset -1px -1px 3px var(--sl);
         letter-spacing: 0.04em;
       }
       .tag-pill.none {
-        border-color: var(--border2);
         color: var(--text3);
       }
       .tag-count {
         display: inline-block;
         font-size: 11px;
-        padding: 1px 5px;
-        border: 1px solid var(--border2);
+        padding: 1px 6px;
+        border-radius: 8px;
         color: var(--text2);
+        background: var(--bg);
+        box-shadow: inset 1px 1px 2px var(--sd), inset -1px -1px 2px var(--sl);
         font-variant-numeric: tabular-nums;
         margin-left: 4px;
       }
@@ -394,7 +493,8 @@
       .modal-mask {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.75);
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -402,35 +502,38 @@
       }
       .modal {
         background: var(--bg);
-        border: 1px solid var(--border2);
+        border-radius: 20px;
         width: 560px;
         max-height: 70vh;
         display: flex;
         flex-direction: column;
+        box-shadow: 12px 12px 30px rgba(0, 0, 0, 0.5),
+          -12px -12px 30px rgba(58, 58, 60, 0.3);
       }
       .modal-head {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid var(--sep);
       }
       .modal-head h3 {
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 600;
         letter-spacing: 0.06em;
+        color: var(--text);
       }
       .modal-body {
-        padding: 10px 16px;
+        padding: 12px 20px;
         overflow-y: auto;
         flex: 1;
       }
       .modal-foot {
-        padding: 10px 16px;
-        border-top: 1px solid var(--border);
+        padding: 12px 20px;
         display: flex;
         gap: 8px;
         justify-content: flex-end;
+        border-top: 1px solid var(--sep);
       }
       .crumb {
         font-size: 13px;
@@ -440,33 +543,36 @@
         font-family: "Consolas", "Monaco", monospace;
       }
       .dir-item {
-        padding: 7px 10px;
-        border: 1px solid transparent;
+        padding: 8px 12px;
+        border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
         display: flex;
         align-items: center;
         gap: 8px;
         color: var(--text2);
-        transition: border-color 0.15s, color 0.15s;
+        transition: box-shadow 0.2s ease, color 0.2s ease;
       }
       .dir-item:hover {
-        border-color: var(--border2);
         color: var(--text);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
 
       .model-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 10px;
-        border: 1px solid var(--border);
-        margin-bottom: 6px;
+        padding: 12px;
+        border-radius: 12px;
+        margin-bottom: 8px;
         gap: 10px;
-        transition: border-color 0.15s;
+        background: var(--bg);
+        box-shadow: 4px 4px 8px var(--sd), -4px -4px 8px var(--sl);
+        transition: box-shadow 0.2s ease;
       }
       .model-row:hover {
-        border-color: var(--border2);
+        box-shadow: 6px 6px 12px var(--sd2), -6px -6px 12px var(--sl2);
+        transform: translateY(-1px);
       }
       .model-info {
         display: flex;
@@ -497,7 +603,8 @@
       .drawer-mask {
         position: fixed;
         inset: 0;
-        background: rgba(0, 0, 0, 0.6);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
         z-index: 90;
       }
       .drawer {
@@ -507,59 +614,64 @@
         bottom: 0;
         width: 440px;
         background: var(--bg);
-        border-left: 1px solid var(--border2);
+        border-radius: 20px 0 0 20px;
         display: flex;
         flex-direction: column;
         z-index: 91;
+        box-shadow: -8px 0 20px rgba(0, 0, 0, 0.4);
       }
       .drawer-head {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        border-bottom: 1px solid var(--sep);
       }
       .drawer-head h3 {
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 600;
         letter-spacing: 0.06em;
+        color: var(--text);
       }
       .drawer-body {
         flex: 1;
         overflow-y: auto;
-        padding: 14px 16px;
+        padding: 16px 20px;
       }
       .drawer-foot {
-        padding: 10px 16px;
-        border-top: 1px solid var(--border);
+        padding: 12px 20px;
         display: flex;
         gap: 8px;
+        border-top: 1px solid var(--sep);
       }
       .preview {
         width: 100%;
         margin-bottom: 12px;
         background: var(--bg3);
-        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: inset 3px 3px 6px var(--sd), inset -3px -3px 6px var(--sl);
       }
       .chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 6px;
         margin-bottom: 12px;
       }
       .chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: transparent;
-        border: 1px solid var(--border);
-        padding: 3px 8px;
+        background: var(--bg);
+        border-radius: 10px;
+        padding: 4px 10px;
         font-size: 13px;
         color: var(--text);
-        transition: border-color 0.15s;
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
       }
       .chip:hover {
-        border-color: var(--border2);
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+        transform: translateY(-1px);
       }
       .chip .x {
         cursor: pointer;
@@ -585,32 +697,36 @@
       .cand-list {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
       }
       .cand {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 5px 6px;
+        padding: 6px 8px;
         font-size: 13px;
-        border: 1px solid transparent;
-        transition: border-color 0.15s;
+        border-radius: 8px;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
       }
       .cand:hover {
-        border-color: var(--border);
-      }
-      .cand input {
-        accent-color: var(--accent);
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+        transform: translateY(-1px);
       }
       .cand .prob-bar {
         flex: 1;
-        height: 2px;
-        background: var(--bg3);
+        height: 6px;
+        border-radius: 3px;
+        background: var(--bg);
+        box-shadow: inset 1px 1px 2px var(--sd), inset -1px -1px 2px var(--sl);
         overflow: hidden;
       }
       .cand .prob-bar > div {
         height: 100%;
-        background: var(--accent-dim);
+        background: var(--accent);
+        border-radius: 3px;
+        opacity: 0.6;
       }
       .cand .prob-val {
         width: 38px;
@@ -621,17 +737,17 @@
       }
       .cat-tag {
         font-size: 11px;
-        padding: 1px 5px;
-        border: 1px solid var(--border2);
+        padding: 1px 6px;
+        border-radius: 8px;
         color: var(--text3);
+        background: var(--bg);
+        box-shadow: inset 1px 1px 2px var(--sd), inset -1px -1px 2px var(--sl);
         letter-spacing: 0.04em;
       }
       .cat-0 {
-        border-color: var(--green);
         color: var(--green);
       }
       .cat-4 {
-        border-color: var(--red);
         color: var(--red);
       }
       .hint {
@@ -647,11 +763,12 @@
         transform: translateX(-50%);
         background: var(--bg);
         color: var(--text);
-        padding: 8px 16px;
+        padding: 10px 20px;
         font-size: 14px;
         z-index: 200;
-        border: 1px solid var(--border2);
+        border-radius: 12px;
         letter-spacing: 0.04em;
+        box-shadow: 6px 6px 14px var(--sd2), -6px -6px 14px var(--sl2);
       }
       .chip .prob {
         color: var(--text3);
@@ -665,7 +782,7 @@
       .tr-field label {
         display: block;
         font-size: 13px;
-        margin-bottom: 4px;
+        margin-bottom: 5px;
         color: var(--text2);
         letter-spacing: 0.04em;
       }
@@ -674,18 +791,20 @@
       .tr-field textarea {
         width: 100%;
         box-sizing: border-box;
-        padding: 6px 8px;
-        border: 1px solid var(--border);
-        background: transparent;
+        padding: 8px 10px;
+        border: none;
+        border-radius: 8px;
+        background: var(--bg);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
         color: var(--text);
         font-size: 14px;
-        transition: border-color 0.15s;
+        transition: box-shadow 0.2s ease;
       }
       .tr-field input:focus,
       .tr-field select:focus,
       .tr-field textarea:focus {
         outline: none;
-        border-color: var(--accent);
+        box-shadow: inset 3px 3px 6px var(--sd), inset -3px -3px 6px var(--sl);
       }
       .tr-field textarea {
         resize: vertical;
@@ -704,29 +823,30 @@
       .tr-model-list {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 6px;
         margin-top: 8px;
         max-height: 120px;
         overflow-y: auto;
       }
       .tr-model-chip {
-        padding: 3px 8px;
-        border: 1px solid var(--border);
-        background: transparent;
+        padding: 4px 10px;
+        border-radius: 10px;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
         color: var(--text2);
         font-size: 13px;
         cursor: pointer;
         white-space: nowrap;
-        transition: border-color 0.15s, color 0.15s;
+        transition: box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease;
       }
       .tr-model-chip:hover {
-        border-color: var(--border2);
         color: var(--text);
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+        transform: translateY(-1px);
       }
       .tr-model-chip.active {
-        border-color: var(--accent);
         color: var(--accent);
-        background: rgba(106, 154, 214, 0.06);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .tr-endpoint-hint {
         margin-top: 4px;
@@ -736,17 +856,17 @@
         font-family: "Consolas", "Monaco", monospace;
       }
 
-      /* 标签 */
       .manage-bar {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 7px 10px;
+        padding: 10px 12px;
         background: var(--bg);
-        border: 1px solid var(--border);
+        border-radius: 12px;
         margin-bottom: 8px;
         font-size: 14px;
         flex-wrap: wrap;
+        box-shadow: 4px 4px 8px var(--sd), -4px -4px 8px var(--sl);
       }
       .manage-count {
         margin-right: auto;
@@ -755,38 +875,41 @@
       }
       .tag-stats-panel {
         background: var(--bg);
-        border: 1px solid var(--border);
-        padding: 8px 10px;
+        border-radius: 12px;
+        padding: 10px 12px;
         margin-bottom: 8px;
         max-height: 240px;
         overflow-y: auto;
+        box-shadow: inset 3px 3px 6px var(--sd), inset -3px -3px 6px var(--sl);
       }
       .tag-stats-chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 4px;
+        gap: 6px;
         margin-top: 6px;
       }
       .tag-stat-chip {
         display: inline-flex;
         align-items: center;
         gap: 4px;
-        padding: 2px 8px;
-        border: 1px solid var(--border);
-        background: transparent;
+        padding: 3px 10px;
+        border-radius: 10px;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
         color: var(--text2);
         font-size: 13px;
         cursor: pointer;
         white-space: nowrap;
-        transition: border-color 0.15s, color 0.15s;
+        transition: box-shadow 0.2s ease, color 0.2s ease, transform 0.2s ease;
       }
       .tag-stat-chip:hover {
-        border-color: var(--border2);
         color: var(--text);
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+        transform: translateY(-1px);
       }
       .tag-stat-chip.active {
-        border-color: var(--accent);
         color: var(--accent);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .tag-stat-chip .count {
         font-size: 11px;
@@ -807,43 +930,47 @@
       .tag-stat-chip.pending-delete {
         opacity: 0.4;
         text-decoration: line-through;
-        border-color: var(--red);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
       }
       .card.selected {
-        outline: 2px solid var(--accent);
-        outline-offset: -2px;
+        box-shadow: inset 0 0 0 2px rgba(108, 142, 191, 0.4),
+          6px 6px 12px var(--sd), -6px -6px 12px var(--sl);
       }
       .card-check {
         position: absolute;
-        top: 4px;
-        left: 4px;
-        width: 18px;
-        height: 18px;
-        border: 1px solid var(--border2);
-        background: rgba(0, 0, 0, 0.7);
+        top: 6px;
+        left: 6px;
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        background: var(--bg);
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 14px;
-        color: transparent;
         z-index: 1;
-        transition: border-color 0.15s;
+        transition: box-shadow 0.2s ease;
       }
       .card-check.checked {
-        color: var(--accent);
-        border-color: var(--accent);
-        background: rgba(0, 0, 0, 0.8);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+      }
+      .card-check.checked::after {
+        content: "";
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 5px 6px 5px;
+        border-color: transparent transparent var(--red) transparent;
       }
       .chip-highlight {
-        border-color: var(--accent) !important;
         color: var(--accent) !important;
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl) !important;
       }
-      /* 工作目录 */
       .folder-card {
         display: flex;
         flex-direction: column;
         justify-content: center;
-        padding: 14px 12px;
+        padding: 16px 14px;
       }
       .folder-card .name {
         font-size: 14px;
@@ -876,7 +1003,9 @@
         z-index: 10;
         background: var(--bg);
         margin: -16px -16px 8px;
-        padding: 16px 16px 0;
+        padding: 16px 16px 8px;
+        border-radius: 0 0 12px 12px;
+        box-shadow: 0 4px 10px var(--sd);
       }
       .section-divider {
         display: flex;
@@ -893,18 +1022,23 @@
       .section-divider::after {
         content: "";
         flex: 1;
-        height: 1px;
-        background: var(--border);
+        height: 2px;
+        border-radius: 1px;
+        background: var(--bg);
+        box-shadow: inset 1px 1px 2px var(--sd), inset -1px -1px 2px var(--sl);
       }
       .folder-card-wrap {
         cursor: pointer;
-        transition: background 0.15s;
+        border-radius: 14px;
+        background: var(--bg);
+        box-shadow: 5px 5px 10px var(--sd), -5px -5px 10px var(--sl);
+        transition: box-shadow 0.2s ease, transform 0.2s ease;
       }
       .folder-card-wrap:hover {
-        background: var(--bg2);
+        box-shadow: 9px 9px 18px var(--sd2), -9px -9px 18px var(--sl2);
+        transform: translateY(-3px);
       }
 
-      /* 打标进度 */
       .batch-progress-view {
         flex: 1;
         display: flex;
@@ -919,9 +1053,10 @@
       }
       .batch-progress-title {
         font-size: 16px;
-        font-weight: 500;
+        font-weight: 600;
         margin-bottom: 8px;
         letter-spacing: 0.06em;
+        color: var(--text);
       }
       .batch-progress-count {
         font-size: 34px;
@@ -944,7 +1079,6 @@
         max-width: 500px;
       }
 
-      /* 批量审核 */
       .batch-review {
         flex: 1;
         display: flex;
@@ -956,16 +1090,19 @@
         align-items: center;
         gap: 12px;
         padding: 0 16px;
-        height: 48px;
+        height: 56px;
         background: var(--bg);
-        border-bottom: 1px solid var(--border);
+        box-shadow: 0 4px 10px var(--sd);
         flex-shrink: 0;
+        border-radius: 0 0 16px 16px;
+        margin-bottom: 2px;
       }
       .batch-review-bar h3 {
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 600;
         white-space: nowrap;
         letter-spacing: 0.05em;
+        color: var(--text);
       }
       .batch-review-actions {
         display: flex;
@@ -981,15 +1118,16 @@
       .batch-review-grid {
         flex: 1;
         overflow-y: auto;
-        padding: 0;
+        padding: 8px;
       }
       .batch-review-panel {
         width: 400px;
         flex-shrink: 0;
         overflow-y: auto;
-        padding: 14px 16px;
+        padding: 16px;
         background: var(--bg);
-        border-left: 1px solid var(--border);
+        box-shadow: -4px 0 10px var(--sd);
+        border-radius: 16px 0 0 16px;
       }
       .batch-review-grid .tag-stats-panel {
         margin: 8px;
@@ -1006,31 +1144,27 @@
         gap: 6px;
       }
 
-      /* 标签频率 */
       .batch-multi-tags {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 4px;
         margin-top: 10px;
       }
       .batch-multi-tag {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 5px 8px;
-        background: transparent;
-        border: 1px solid var(--border);
+        padding: 6px 10px;
+        background: var(--bg);
+        border-radius: 8px;
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
         cursor: pointer;
         font-size: 14px;
-        transition: border-color 0.15s;
+        transition: box-shadow 0.2s ease;
       }
       .batch-multi-tag:hover {
-        border-color: var(--border2);
-      }
-      .batch-multi-tag input[type="checkbox"] {
-        flex-shrink: 0;
-        cursor: pointer;
-        accent-color: var(--accent);
+        box-shadow: 4px 4px 8px var(--sd2), -4px -4px 8px var(--sl2);
+        transform: translateY(-1px);
       }
       .batch-multi-tag span {
         flex: 1;
@@ -1043,6 +1177,231 @@
         font-size: 12px;
         color: var(--text3);
         font-variant-numeric: tabular-nums;
+      }
+      .dict-split {
+        display: flex;
+        height: 60vh;
+        border-top: 1px solid var(--sep);
+      }
+      .dict-left {
+        flex: 0 0 180px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        padding: 8px;
+        gap: 4px;
+        border-right: 1px solid var(--sep);
+      }
+      .dict-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 0 8px;
+      }
+      .dict-nav-btn {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        text-align: left;
+        font-size: 14px;
+        color: var(--text2);
+        background: var(--bg);
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        transition: box-shadow 0.2s ease, color 0.2s ease;
+      }
+      .dict-nav-btn:hover {
+        color: var(--text);
+        box-shadow: 3px 3px 6px var(--sd2), -3px -3px 6px var(--sl2);
+      }
+      .dict-nav-btn.active {
+        color: var(--accent);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+      }
+      .dict-letter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+        padding: 4px 0;
+      }
+      .dict-letter {
+        padding: 8px 0;
+        text-align: center;
+        font-size: 13px;
+        font-family: "Consolas", "Monaco", monospace;
+        color: var(--text2);
+        background: var(--bg);
+        border: none;
+        border-radius: 6px;
+        box-shadow: 2px 2px 4px var(--sd), -2px -2px 4px var(--sl);
+        cursor: pointer;
+        transition: box-shadow 0.2s ease, color 0.2s ease;
+      }
+      .dict-letter:hover {
+        color: var(--text);
+        box-shadow: 3px 3px 6px var(--sd2), -3px -3px 6px var(--sl2);
+      }
+      .dict-letter.active {
+        color: var(--accent);
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+      }
+      .dict-freq-stats {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .dict-freq-stat {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .dict-freq-num {
+        font-size: 20px;
+        font-family: "Consolas", "Monaco", monospace;
+        color: var(--accent);
+      }
+      .dict-freq-label {
+        font-size: 11px;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .dict-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--sep);
+      }
+      .dict-list {
+        flex: 1;
+        overflow-y: auto;
+      }
+      .dict-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        transition: box-shadow 0.2s ease;
+      }
+      .dict-row:hover {
+        box-shadow: inset 2px 2px 4px var(--sd), inset -2px -2px 4px var(--sl);
+      }
+      .dict-en {
+        flex: 1;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text);
+      }
+      .dict-zh {
+        flex: 1;
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text2);
+      }
+      .dict-count {
+        font-size: 12px;
+        font-family: "Consolas", "Monaco", monospace;
+        color: var(--text3);
+        min-width: 40px;
+        text-align: right;
+      }
+      .dict-edit-en {
+        flex: 1;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 15px;
+        min-width: 0;
+      }
+      .dict-edit-zh {
+        flex: 1;
+        font-size: 15px;
+        min-width: 0;
+      }
+      .dict-pager {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-top: 1px solid var(--sep);
+        font-size: 13px;
+        color: var(--text2);
+      }
+      .dict-pager button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+      }
+      .modal-mask {
+        animation: fadeIn 0.25s ease;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .modal {
+        animation: modalIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .drawer-mask {
+        animation: fadeIn 0.25s ease;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .drawer {
+        animation: drawerIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .toast {
+        animation: toastIn 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .batch-progress-view {
+        animation: fadeIn 0.3s ease;
+      }
+      .batch-review {
+        animation: fadeIn 0.25s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes modalIn {
+        from {
+          opacity: 0;
+          transform: scale(0.92);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @keyframes drawerIn {
+        from {
+          transform: translateX(100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+      @keyframes toastIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, 20px);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
       }
     </style>
   </head>
@@ -1276,18 +1635,27 @@
               v-model="prefix"
               placeholder="如：best quality, score_7, safe"
             />
-          </div>
-          <div class="check">
-            <input type="checkbox" id="af" v-model="normalizeFormat" />
-            <label for="af">专用格式（下划线转空格）</label>
-          </div>
-          <div class="check">
-            <input type="checkbox" id="ic" v-model="includeCharacter" />
-            <label for="ic">包含角色标签（识别特定角色名）</label>
-          </div>
-          <div class="check">
-            <input type="checkbox" id="ow" v-model="overwrite" />
-            <label for="ow">覆盖已有标签文件（不勾选则跳过已打标的图片）</label>
+            <div class="toggle-row" @click="normalizeFormat = !normalizeFormat">
+              <span>专用格式（下划线转空格）</span>
+              <div class="ios-switch" :class="{on: normalizeFormat}">
+                <span class="ios-knob"></span>
+              </div>
+            </div>
+            <div
+              class="toggle-row"
+              @click="includeCharacter = !includeCharacter"
+            >
+              <span>包含角色标签（识别特定角色名）</span>
+              <div class="ios-switch" :class="{on: includeCharacter}">
+                <span class="ios-knob"></span>
+              </div>
+            </div>
+            <div class="toggle-row" @click="overwrite = !overwrite">
+              <span>覆盖已有标签文件（不勾选则跳过已打标的图片）</span>
+              <div class="ios-switch" :class="{on: overwrite}">
+                <span class="ios-knob"></span>
+              </div>
+            </div>
           </div>
 
           <div class="section-title">翻译设置</div>
@@ -1350,6 +1718,7 @@
                   v-if="workspaceNavPath"
                   class="btn btn-sm"
                   @click="backToParentFolder"
+                  :disabled="batchTagging"
                 >
                   返回上级
                 </button>
@@ -1536,9 +1905,7 @@
                       v-if="manageMode || batchSelectMode"
                       class="card-check"
                       :class="{checked: manageMode ? selectedPaths[img.path] : batchSelectedPaths[img.path]}"
-                    >
-                      ✓
-                    </div>
+                    ></div>
                     <img
                       :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
                       loading="lazy"
@@ -1572,7 +1939,11 @@
           <template v-else>
             <div class="sticky-bar">
               <div v-if="defaultWorkspace" class="workspace-bar">
-                <button class="btn btn-sm" @click="backToWorkspace">
+                <button
+                  class="btn btn-sm"
+                  @click="backToWorkspace"
+                  :disabled="batchTagging"
+                >
                   返回工作目录
                 </button>
               </div>
@@ -1732,9 +2103,7 @@
                     v-if="manageMode || batchSelectMode"
                     class="card-check"
                     :class="{checked: manageMode ? selectedPaths[img.path] : batchSelectedPaths[img.path]}"
-                  >
-                    ✓
-                  </div>
+                  ></div>
                   <img
                     :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
                     loading="lazy"
@@ -1901,9 +2270,7 @@
                     v-if="batchMultiMode"
                     class="card-check"
                     :class="{checked: batchMultiSelected[img.path]}"
-                  >
-                    ✓
-                  </div>
+                  ></div>
                   <img
                     :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
                     loading="lazy"
@@ -2013,11 +2380,11 @@
                       class="cand"
                       v-for="c in batchCandidates"
                       :key="c.name"
+                      @click="batchToggleCand(c.name, !batchReviewTags.includes(c.name))"
                     >
                       <input
                         type="checkbox"
                         :checked="batchReviewTags.includes(c.name)"
-                        @change="batchToggleCand(c.name, $event.target.checked)"
                       />
                       <span class="cat-tag" :class="'cat-'+c.category"
                         >{{ c.category===4 ? '角色' : '通用' }}</span
@@ -2293,12 +2660,13 @@
               <button class="btn btn-sm" @click="addTagsByProb(0)">全选</button>
             </div>
             <div class="cand-list" v-if="candidates.length">
-              <div class="cand" v-for="c in candidates" :key="c.name">
-                <input
-                  type="checkbox"
-                  :checked="editorTags.includes(c.name)"
-                  @change="toggleCand(c.name, $event.target.checked)"
-                />
+              <div
+                class="cand"
+                v-for="c in candidates"
+                :key="c.name"
+                @click="toggleCand(c.name, !editorTags.includes(c.name))"
+              >
+                <input type="checkbox" :checked="editorTags.includes(c.name)" />
                 <span class="cat-tag" :class="'cat-'+c.category"
                   >{{ c.category===4 ? '角色' : '通用' }}</span
                 >
@@ -2420,147 +2788,136 @@
 
       <!-- 词库管理 -->
       <div class="modal-mask" v-if="dictOpen">
-        <div class="modal" style="width: 650px; max-width: 90vw">
+        <div class="modal" style="width: 900px; max-width: 90vw">
           <div class="modal-head">
             <h3>翻译词库管理</h3>
             <button class="btn btn-sm btn-ghost" @click="dictOpen=false">
               ✕
             </button>
           </div>
-          <div
-            class="modal-body"
-            style="display: flex; flex-direction: column; gap: 10px"
-          >
-            <div style="display: flex; align-items: center; gap: 10px">
-              <input
-                type="text"
-                v-model="dictSearch"
-                placeholder="搜索英文或中文…"
-                @input="dictSearchInput"
-                style="flex: 1"
-              />
-              <span
-                style="
-                  color: var(--text2);
-                  font-size: 15px;
-                  white-space: nowrap;
-                "
-                >共 {{ dictTotal }} 条</span
+          <div class="dict-split">
+            <div class="dict-left">
+              <button
+                class="dict-nav-btn"
+                :class="{active: dictView==='alpha'}"
+                @click="switchDictView('alpha')"
               >
-              <button class="btn btn-sm" @click="exportDict">导出词库</button>
-              <button class="btn btn-sm" @click="importDict">导入词库</button>
-            </div>
-            <div v-if="dictLoading" class="empty">加载中…</div>
-            <div v-else-if="!dictItems.length" class="empty">无匹配结果</div>
-            <div v-else style="max-height: 50vh; overflow-y: auto">
-              <div
-                v-for="item in dictItems"
-                :key="item.en"
-                style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                  padding: 6px 8px;
-                  border-bottom: 1px solid var(--border);
-                "
+                按字母
+              </button>
+              <button
+                class="dict-nav-btn"
+                :class="{active: dictView==='freq'}"
+                @click="switchDictView('freq')"
               >
-                <template v-if="dictEditKey === item.en">
-                  <input
-                    v-model="dictEditEn"
-                    style="
-                      flex: 1;
-                      font-family: monospace;
-                      font-size: 15px;
-                      min-width: 0;
-                    "
-                  />
-                  <input
-                    v-model="dictEditZh"
-                    style="flex: 1; font-size: 15px; min-width: 0"
-                  />
-                  <button
-                    class="btn btn-sm btn-primary"
-                    style="flex: 0 0 auto"
-                    @click="saveEditDict"
-                  >
-                    保存
-                  </button>
-                  <button
-                    class="btn btn-sm"
-                    style="flex: 0 0 auto"
-                    @click="cancelEditDict"
-                  >
-                    取消
-                  </button>
-                </template>
-                <template v-else>
-                  <span
-                    style="
-                      flex: 1;
-                      font-family: monospace;
-                      font-size: 15px;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      white-space: nowrap;
-                    "
-                    :title="item.en"
-                    >{{ item.en }}</span
-                  >
-                  <span
-                    style="
-                      flex: 1;
-                      font-size: 15px;
-                      overflow: hidden;
-                      text-overflow: ellipsis;
-                      white-space: nowrap;
-                    "
-                    :title="item.zh"
-                    >{{ item.zh }}</span
-                  >
-                  <button
-                    class="btn btn-sm"
-                    style="flex: 0 0 auto"
-                    @click="startEditDict(item)"
-                  >
-                    编辑
-                  </button>
-                  <button
-                    class="btn btn-sm btn-danger"
-                    style="flex: 0 0 auto"
-                    @click="deleteDictItem(item.en)"
-                  >
-                    删除
-                  </button>
-                </template>
+                按频次
+              </button>
+              <div v-if="dictView==='alpha'" class="dict-letter-grid">
+                <button
+                  v-for="l in 'abcdefghijklmnopqrstuvwxyz'.split('')"
+                  :key="l"
+                  class="dict-letter"
+                  :class="{active: dictInitial===l}"
+                  @click="loadDictAlpha(l)"
+                >
+                  {{ l.toUpperCase() }}
+                </button>
+                <button
+                  class="dict-letter"
+                  :class="{active: dictInitial==='other'}"
+                  @click="loadDictAlpha('other')"
+                >
+                  其他
+                </button>
+              </div>
+              <div v-if="dictView==='freq'" class="dict-freq-stats">
+                <div class="dict-freq-stat">
+                  <span class="dict-freq-num">{{ dictFreqStats.files }}</span
+                  ><span class="dict-freq-label">文件</span>
+                </div>
+                <div class="dict-freq-stat">
+                  <span class="dict-freq-num">{{ dictFreqStats.tags }}</span
+                  ><span class="dict-freq-label">标签</span>
+                </div>
+                <div class="dict-freq-stat">
+                  <span class="dict-freq-num">{{ dictFreqStats.unique }}</span
+                  ><span class="dict-freq-label">唯一</span>
+                </div>
               </div>
             </div>
-            <div
-              v-if="dictTotal > dictPageSize"
-              style="
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 12px;
-              "
-            >
-              <button
-                class="btn btn-sm"
-                @click="dictPrev"
-                :disabled="dictPage <= 1"
-              >
-                上一页
-              </button>
-              <span style="font-size: 15px"
-                >第 {{ dictPage }} 页 / 共 {{ Math.ceil(dictTotal /
-                dictPageSize) }} 页</span
-              >
-              <button
-                class="btn btn-sm"
-                @click="dictNext"
-                :disabled="dictPage * dictPageSize >= dictTotal"
-              >
-                下一页
-              </button>
+            <div class="dict-right">
+              <div class="dict-toolbar">
+                <input
+                  type="text"
+                  v-model="dictSearch"
+                  @input="dictSearchInput"
+                  placeholder="搜索…"
+                  style="flex: 1"
+                />
+                <span
+                  style="
+                    color: var(--text2);
+                    font-size: 13px;
+                    white-space: nowrap;
+                  "
+                  >共 {{ dictTotal }} 条</span
+                >
+                <button class="btn btn-sm" @click="exportDict">导出</button>
+                <button class="btn btn-sm" @click="importDict">导入</button>
+              </div>
+              <div v-if="dictLoading" class="empty">加载中…</div>
+              <div v-else-if="!dictItems.length" class="empty">无匹配结果</div>
+              <div v-else class="dict-list">
+                <div v-for="item in dictItems" :key="item.en" class="dict-row">
+                  <template v-if="dictEditKey === item.en">
+                    <input v-model="dictEditEn" class="dict-edit-en" />
+                    <input v-model="dictEditZh" class="dict-edit-zh" />
+                    <button
+                      class="btn btn-sm btn-primary"
+                      @click="saveEditDict"
+                    >
+                      保存
+                    </button>
+                    <button class="btn btn-sm" @click="cancelEditDict">
+                      取消
+                    </button>
+                  </template>
+                  <template v-else>
+                    <span class="dict-en" :title="item.en">{{ item.en }}</span>
+                    <span class="dict-zh" :title="item.zh"
+                      >{{ item.zh || '—' }}</span
+                    >
+                    <span v-if="dictView==='freq'" class="dict-count"
+                      >{{ item.count }}</span
+                    >
+                    <button class="btn btn-sm" @click="startEditDict(item)">
+                      编辑
+                    </button>
+                    <button
+                      class="btn btn-sm btn-danger"
+                      @click="deleteDictItem(item.en)"
+                    >
+                      删除
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <div class="dict-pager" v-if="dictTotalPages > 1">
+                <button
+                  class="btn btn-sm"
+                  @click="dictPrevPage"
+                  :disabled="dictPage <= 1"
+                >
+                  上一页
+                </button>
+                <span>{{ dictPage }} / {{ dictTotalPages }}</span>
+                <button
+                  class="btn btn-sm"
+                  @click="dictNextPage"
+                  :disabled="dictPage >= dictTotalPages"
+                >
+                  下一页
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2702,7 +3059,7 @@
                   display: flex;
                   gap: 8px;
                   padding: 4px 8px;
-                  border-bottom: 1px solid var(--border);
+                  border-bottom: 1px solid var(--sep);
                 "
               >
                 <span
@@ -2788,12 +3145,19 @@
           const dictSearch = ref("");
           const dictItems = ref([]);
           const dictTotal = ref(0);
-          const dictPage = ref(1);
-          const dictPageSize = 50;
           const dictLoading = ref(false);
           const dictEditKey = ref(null);
           const dictEditEn = ref("");
           const dictEditZh = ref("");
+          const dictView = ref("alpha");
+          const dictInitial = ref("a");
+          const dictFreqStats = ref({ files: 0, tags: 0, unique: 0 });
+          const dictPage = ref(1);
+          const dictPageSize = ref(200);
+          const dictTotalPages = computed(() =>
+            Math.max(1, Math.ceil(dictTotal.value / dictPageSize.value))
+          );
+          let dictSearchTimer = null;
           // 导入模式
           const importFile = ref(null);
           const importModeOpen = ref(false);
@@ -2852,18 +3216,30 @@
 
           async function openDict() {
             dictOpen.value = true;
+            dictView.value = "alpha";
+            dictInitial.value = "a";
             dictSearch.value = "";
             dictPage.value = 1;
-            await loadDict();
+            dictEditKey.value = null;
+            await loadDictAlpha("a");
           }
-          async function loadDict() {
+          async function loadDictAlpha(initial) {
+            dictInitial.value = initial;
+            dictEditKey.value = null;
             dictLoading.value = true;
             try {
-              const params = new URLSearchParams();
-              if (dictSearch.value) params.set("q", dictSearch.value);
-              params.set("page", dictPage.value);
-              params.set("size", dictPageSize);
-              const r = await fetch("/api/translate/cache/list?" + params);
+              const off = (dictPage.value - 1) * dictPageSize.value;
+              let url =
+                "/api/translate/cache/all?initial=" +
+                initial +
+                "&limit=" +
+                dictPageSize.value +
+                "&offset=" +
+                off;
+              if (dictSearch.value) {
+                url += "&q=" + encodeURIComponent(dictSearch.value);
+              }
+              const r = await fetch(url);
               const d = await r.json();
               dictItems.value = d.items;
               dictTotal.value = d.total;
@@ -2873,6 +3249,78 @@
               dictLoading.value = false;
             }
           }
+          async function loadDictFreq() {
+            dictEditKey.value = null;
+            dictLoading.value = true;
+            try {
+              const off = (dictPage.value - 1) * dictPageSize.value;
+              let url =
+                "/api/translate/cache/frequency?limit=" +
+                dictPageSize.value +
+                "&offset=" +
+                off;
+              if (dictSearch.value) {
+                url += "&q=" + encodeURIComponent(dictSearch.value);
+              }
+              const r = await fetch(url);
+              const d = await r.json();
+              const tags = d.items.map((i) => i.en);
+              await lookupTranslations(tags);
+              dictItems.value = d.items.map((i) => ({
+                en: i.en,
+                zh: globalTranslations.value[i.en] || "",
+                count: i.count,
+                source: "",
+                hit_count: 0,
+              }));
+              dictTotal.value = d.total || d.items.length;
+              dictFreqStats.value = {
+                files: d.total_files,
+                tags: d.total_tags,
+                unique: d.total_unique,
+              };
+            } catch (e) {
+              showToast("加载频次失败");
+            } finally {
+              dictLoading.value = false;
+            }
+          }
+          function switchDictView(view) {
+            dictView.value = view;
+            dictSearch.value = "";
+            dictPage.value = 1;
+            if (view === "alpha") {
+              loadDictAlpha(dictInitial.value);
+            } else {
+              loadDictFreq();
+            }
+          }
+          function dictSearchInput() {
+            if (dictSearchTimer) clearTimeout(dictSearchTimer);
+            dictSearchTimer = setTimeout(() => {
+              dictPage.value = 1;
+              reloadDict();
+            }, 300);
+          }
+          function dictPrevPage() {
+            if (dictPage.value > 1) {
+              dictPage.value--;
+              reloadDict();
+            }
+          }
+          function dictNextPage() {
+            if (dictPage.value < dictTotalPages.value) {
+              dictPage.value++;
+              reloadDict();
+            }
+          }
+          async function reloadDict() {
+            if (dictView.value === "alpha") {
+              await loadDictAlpha(dictInitial.value);
+            } else {
+              await loadDictFreq();
+            }
+          }
           async function deleteDictItem(en) {
             try {
               await fetch("/api/translate/cache?en=" + encodeURIComponent(en), {
@@ -2880,26 +3328,10 @@
               });
               delete globalTranslations.value[en];
               globalTranslations.value = { ...globalTranslations.value };
-              await loadDict();
+              await reloadDict();
             } catch (e) {
               showToast("删除失败");
             }
-          }
-          function dictNext() {
-            if (dictPage.value * dictPageSize < dictTotal.value) {
-              dictPage.value++;
-              loadDict();
-            }
-          }
-          function dictPrev() {
-            if (dictPage.value > 1) {
-              dictPage.value--;
-              loadDict();
-            }
-          }
-          function dictSearchInput() {
-            dictPage.value = 1;
-            loadDict();
           }
           function startEditDict(item) {
             dictEditKey.value = item.en;
@@ -2938,7 +3370,7 @@
               globalTranslations.value[newEn] = newZh;
               globalTranslations.value = { ...globalTranslations.value };
               dictEditKey.value = null;
-              await loadDict();
+              await reloadDict();
             } catch (e) {
               showToast(e.message || "保存失败");
             }
@@ -3009,7 +3441,7 @@
               });
               const d = await r.json();
               if (!r.ok) throw new Error(d.detail || "导入失败");
-              await loadDict();
+              await reloadDict();
             } catch (e) {
               showToast("导入失败：" + e.message);
             } finally {
@@ -4633,6 +5065,7 @@
             folder,
             images,
             scanning,
+
             trigger,
             generalThreshold,
             characterThreshold,
@@ -4742,15 +5175,21 @@
             dictSearch,
             dictItems,
             dictTotal,
+            dictLoading,
+            dictView,
+            dictInitial,
+            dictFreqStats,
             dictPage,
             dictPageSize,
-            dictLoading,
-            openDict,
-            loadDict,
-            deleteDictItem,
-            dictNext,
-            dictPrev,
+            dictTotalPages,
             dictSearchInput,
+            dictPrevPage,
+            dictNextPage,
+            openDict,
+            loadDictAlpha,
+            loadDictFreq,
+            switchDictView,
+            deleteDictItem,
             dictEditKey,
             dictEditEn,
             dictEditZh,
