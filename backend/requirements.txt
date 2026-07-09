@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+numpy
+onnxruntime
+pandas
+pillow
+tqdm
+huggingface_hub

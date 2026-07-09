@@ -1,0 +1,12 @@
+{
+  "models": [],
+  "active": "",
+  "translate": {
+    "provider": "openai",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "api_key": "",
+    "model": "",
+    "prompt": "你是一个翻译助手。请将以下Stable Diffusion标签从英文翻译为简体中文。@后的英文不用翻译,但是依旧要按格式输出,每行一个标签，输出格式为\"英文|中文\"。只输出翻译结果，不要解释："
+  },
+  "default_workspace": ""
+}

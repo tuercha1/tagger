@@ -1,0 +1,4854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>打标工具</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        scrollbar-width: none;
+      }
+      *::-webkit-scrollbar {
+        display: none;
+      }
+      :root {
+        --bg: #0c0c0e;
+        --bg2: #111114;
+        --bg3: #16161a;
+        --border: #2a2a32;
+        --border2: #44444e;
+        --text: #f0f0f5;
+        --text2: #9a9aae;
+        --text3: #6a6a7e;
+        --accent: #8cb8f0;
+        --accent-dim: #4a6a9a;
+        --green: #8cc88c;
+        --red: #e07878;
+        --orange: #e0b878;
+      }
+      body {
+        font-family: "Segoe UI", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        height: 100vh;
+        overflow: hidden;
+        letter-spacing: 0.02em;
+      }
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 20px;
+        height: 48px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .topbar h1 {
+        font-size: 16px;
+        font-weight: 500;
+        white-space: nowrap;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: var(--text2);
+        letter-spacing: 0.04em;
+      }
+      .model-select {
+        padding: 4px 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 13px;
+        font-family: inherit;
+        max-width: 200px;
+        cursor: pointer;
+        letter-spacing: 0.03em;
+        transition: border-color 0.15s;
+      }
+      .model-select:hover {
+        border-color: var(--border2);
+      }
+
+      .body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      .sidebar {
+        width: 320px;
+        background: var(--bg);
+        border-right: 1px solid var(--border);
+        padding: 16px;
+        overflow-y: auto;
+        flex-shrink: 0;
+      }
+      .main {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+      }
+
+      .field {
+        margin-bottom: 14px;
+      }
+      .field label {
+        display: block;
+        font-size: 13px;
+        color: var(--text2);
+        margin-bottom: 5px;
+        letter-spacing: 0.05em;
+      }
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        padding: 7px 10px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 14px;
+        transition: border-color 0.15s;
+      }
+      input[type="text"]:focus,
+      input[type="number"]:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        margin: 8px 0;
+        cursor: pointer;
+        color: var(--text2);
+      }
+      .check:hover {
+        color: var(--text);
+      }
+      .check input {
+        width: 14px;
+        height: 14px;
+        accent-color: var(--accent);
+      }
+      .range-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .range-row input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        flex: 1;
+        height: 14px;
+        background: transparent;
+        cursor: pointer;
+        outline: none;
+        padding: 0;
+        margin: 0;
+      }
+      .range-row input[type="range"]::-webkit-slider-runnable-track {
+        height: 2px;
+        background: linear-gradient(
+          to right,
+          var(--accent) 0%,
+          var(--accent) var(--pct, 50%),
+          var(--border2) var(--pct, 50%),
+          var(--border2) 100%
+        );
+      }
+      .range-row input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 2px;
+        height: 14px;
+        background: var(--accent);
+        margin-top: -6px;
+        cursor: pointer;
+      }
+      .range-row input[type="range"]:hover::-webkit-slider-thumb {
+        height: 18px;
+        margin-top: -8px;
+        background: var(--text);
+      }
+      .range-row input[type="range"]::-moz-range-track {
+        height: 2px;
+        background: var(--border2);
+      }
+      .range-row input[type="range"]::-moz-range-progress {
+        height: 2px;
+        background: var(--accent);
+      }
+      .range-row input[type="range"]::-moz-range-thumb {
+        width: 2px;
+        height: 14px;
+        background: var(--accent);
+        border: none;
+        border-radius: 0;
+        cursor: pointer;
+      }
+      .range-row input[type="range"]:hover::-moz-range-thumb {
+        height: 18px;
+        background: var(--text);
+      }
+      .range-row .val {
+        width: 42px;
+        text-align: right;
+        font-size: 13px;
+        color: var(--accent);
+        font-variant-numeric: tabular-nums;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+
+      button {
+        padding: 7px 12px;
+        border: 1px solid var(--border);
+        border-radius: 0;
+        font-size: 14px;
+        cursor: pointer;
+        font-family: inherit;
+        background: transparent;
+        color: var(--text);
+        letter-spacing: 0.03em;
+        transition: border-color 0.15s, color 0.15s, background 0.15s;
+      }
+      .btn {
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn:hover {
+        border-color: var(--border2);
+      }
+      .btn-primary {
+        border: 1px solid var(--accent-dim);
+        color: var(--accent);
+      }
+      .btn-primary:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(106, 154, 214, 0.06);
+      }
+      .btn-primary:disabled {
+        border-color: var(--border);
+        color: var(--text3);
+        cursor: not-allowed;
+      }
+      .btn-primary:disabled:hover {
+        background: transparent;
+      }
+      .btn-sm {
+        padding: 4px 8px;
+        font-size: 13px;
+      }
+      .btn-ghost {
+        border: 1px solid var(--border);
+        color: var(--text2);
+      }
+      .btn-ghost:hover {
+        color: var(--text);
+        border-color: var(--border2);
+      }
+      .btn-danger {
+        border: 1px solid var(--red);
+        color: var(--red);
+        background: transparent;
+      }
+      .btn-danger:hover {
+        background: rgba(196, 90, 90, 0.08);
+      }
+      .btn-block {
+        width: 100%;
+      }
+
+      .section-title {
+        font-size: 12px;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        margin: 20px 0 10px;
+        padding-bottom: 6px;
+        border-bottom: 1px dashed var(--border);
+      }
+      .section-title:first-child {
+        margin-top: 0;
+      }
+
+      .progress-bar {
+        height: 2px;
+        background: var(--bg3);
+        border: none;
+        overflow: hidden;
+      }
+      .progress-bar > div {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.2s;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+      }
+      .card {
+        background: var(--bg);
+        border: none;
+        overflow: hidden;
+        cursor: pointer;
+        transition: background 0.15s;
+        position: relative;
+      }
+      .card:hover {
+        background: var(--bg2);
+      }
+      .card img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        display: block;
+        background: var(--bg3);
+        opacity: 0.9;
+        transition: opacity 0.15s;
+      }
+      .card:hover img {
+        opacity: 1;
+      }
+      .card .info {
+        padding: 6px 8px;
+        border-top: 1px solid var(--border);
+      }
+      .card .name {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text);
+      }
+      .card .meta {
+        font-size: 12px;
+        color: var(--text2);
+        margin-top: 2px;
+        letter-spacing: 0.03em;
+      }
+      .tag-pill {
+        display: inline-block;
+        font-size: 11px;
+        padding: 1px 6px;
+        border: 1px solid var(--green);
+        color: var(--green);
+        letter-spacing: 0.04em;
+      }
+      .tag-pill.none {
+        border-color: var(--border2);
+        color: var(--text3);
+      }
+      .tag-count {
+        display: inline-block;
+        font-size: 11px;
+        padding: 1px 5px;
+        border: 1px solid var(--border2);
+        color: var(--text2);
+        font-variant-numeric: tabular-nums;
+        margin-left: 4px;
+      }
+
+      .empty {
+        text-align: center;
+        color: var(--text3);
+        padding: 60px 20px;
+        font-size: 15px;
+        letter-spacing: 0.05em;
+      }
+
+      .modal-mask {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .modal {
+        background: var(--bg);
+        border: 1px solid var(--border2);
+        width: 560px;
+        max-height: 70vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .modal-head {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .modal-head h3 {
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+      }
+      .modal-body {
+        padding: 10px 16px;
+        overflow-y: auto;
+        flex: 1;
+      }
+      .modal-foot {
+        padding: 10px 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+      .crumb {
+        font-size: 13px;
+        color: var(--text3);
+        padding: 6px 0;
+        word-break: break-all;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+      .dir-item {
+        padding: 7px 10px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text2);
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .dir-item:hover {
+        border-color: var(--border2);
+        color: var(--text);
+      }
+
+      .model-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: 6px;
+        gap: 10px;
+        transition: border-color 0.15s;
+      }
+      .model-row:hover {
+        border-color: var(--border2);
+      }
+      .model-info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        overflow: hidden;
+        flex: 1;
+      }
+      .model-name {
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .model-dir {
+        font-size: 12px;
+        color: var(--text3);
+        word-break: break-all;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+      .model-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+
+      .drawer-mask {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 90;
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 440px;
+        background: var(--bg);
+        border-left: 1px solid var(--border2);
+        display: flex;
+        flex-direction: column;
+        z-index: 91;
+      }
+      .drawer-head {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .drawer-head h3 {
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+      }
+      .drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px 16px;
+      }
+      .drawer-foot {
+        padding: 10px 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 8px;
+      }
+      .preview {
+        width: 100%;
+        margin-bottom: 12px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: transparent;
+        border: 1px solid var(--border);
+        padding: 3px 8px;
+        font-size: 13px;
+        color: var(--text);
+        transition: border-color 0.15s;
+      }
+      .chip:hover {
+        border-color: var(--border2);
+      }
+      .chip .x {
+        cursor: pointer;
+        color: var(--text3);
+        font-size: 12px;
+      }
+      .chip .x:hover {
+        color: var(--red);
+      }
+      .add-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .add-row input {
+        flex: 1;
+      }
+      .cand-quick-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .cand-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .cand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 5px 6px;
+        font-size: 13px;
+        border: 1px solid transparent;
+        transition: border-color 0.15s;
+      }
+      .cand:hover {
+        border-color: var(--border);
+      }
+      .cand input {
+        accent-color: var(--accent);
+      }
+      .cand .prob-bar {
+        flex: 1;
+        height: 2px;
+        background: var(--bg3);
+        overflow: hidden;
+      }
+      .cand .prob-bar > div {
+        height: 100%;
+        background: var(--accent-dim);
+      }
+      .cand .prob-val {
+        width: 38px;
+        text-align: right;
+        color: var(--text3);
+        font-variant-numeric: tabular-nums;
+        font-size: 12px;
+      }
+      .cat-tag {
+        font-size: 11px;
+        padding: 1px 5px;
+        border: 1px solid var(--border2);
+        color: var(--text3);
+        letter-spacing: 0.04em;
+      }
+      .cat-0 {
+        border-color: var(--green);
+        color: var(--green);
+      }
+      .cat-4 {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .hint {
+        font-size: 13px;
+        color: var(--text2);
+        margin-bottom: 8px;
+        letter-spacing: 0.02em;
+      }
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg);
+        color: var(--text);
+        padding: 8px 16px;
+        font-size: 14px;
+        z-index: 200;
+        border: 1px solid var(--border2);
+        letter-spacing: 0.04em;
+      }
+      .chip .prob {
+        color: var(--text3);
+        font-size: 11px;
+        font-variant-numeric: tabular-nums;
+        margin-left: 2px;
+      }
+      .tr-field {
+        margin-bottom: 10px;
+      }
+      .tr-field label {
+        display: block;
+        font-size: 13px;
+        margin-bottom: 4px;
+        color: var(--text2);
+        letter-spacing: 0.04em;
+      }
+      .tr-field input,
+      .tr-field select,
+      .tr-field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 6px 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 14px;
+        transition: border-color 0.15s;
+      }
+      .tr-field input:focus,
+      .tr-field select:focus,
+      .tr-field textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .tr-field textarea {
+        resize: vertical;
+        min-height: 60px;
+      }
+      .tr-field select option {
+        background: var(--bg);
+      }
+      .tr-model-row {
+        display: flex;
+        gap: 8px;
+      }
+      .tr-model-row input {
+        flex: 1;
+      }
+      .tr-model-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 8px;
+        max-height: 120px;
+        overflow-y: auto;
+      }
+      .tr-model-chip {
+        padding: 3px 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text2);
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .tr-model-chip:hover {
+        border-color: var(--border2);
+        color: var(--text);
+      }
+      .tr-model-chip.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: rgba(106, 154, 214, 0.06);
+      }
+      .tr-endpoint-hint {
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--text3);
+        word-break: break-all;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+
+      /* 标签 */
+      .manage-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        margin-bottom: 8px;
+        font-size: 14px;
+        flex-wrap: wrap;
+      }
+      .manage-count {
+        margin-right: auto;
+        color: var(--text2);
+        font-variant-numeric: tabular-nums;
+      }
+      .tag-stats-panel {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        padding: 8px 10px;
+        margin-bottom: 8px;
+        max-height: 240px;
+        overflow-y: auto;
+      }
+      .tag-stats-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 6px;
+      }
+      .tag-stat-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text2);
+        font-size: 13px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .tag-stat-chip:hover {
+        border-color: var(--border2);
+        color: var(--text);
+      }
+      .tag-stat-chip.active {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .tag-stat-chip .count {
+        font-size: 11px;
+        opacity: 0.6;
+        font-variant-numeric: tabular-nums;
+      }
+      .tag-delete-x {
+        margin-left: 4px;
+        color: var(--red);
+        font-size: 11px;
+        cursor: pointer;
+        padding: 0 2px;
+        line-height: 1;
+      }
+      .tag-delete-x:hover {
+        color: var(--text);
+      }
+      .tag-stat-chip.pending-delete {
+        opacity: 0.4;
+        text-decoration: line-through;
+        border-color: var(--red);
+      }
+      .card.selected {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+      .card-check {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        width: 18px;
+        height: 18px;
+        border: 1px solid var(--border2);
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: transparent;
+        z-index: 1;
+        transition: border-color 0.15s;
+      }
+      .card-check.checked {
+        color: var(--accent);
+        border-color: var(--accent);
+        background: rgba(0, 0, 0, 0.8);
+      }
+      .chip-highlight {
+        border-color: var(--accent) !important;
+        color: var(--accent) !important;
+      }
+      /* 工作目录 */
+      .folder-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 14px 12px;
+      }
+      .folder-card .name {
+        font-size: 14px;
+        color: var(--text);
+      }
+      .folder-card .meta {
+        font-size: 12px;
+        color: var(--text3);
+        margin-top: 2px;
+      }
+      .workspace-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .workspace-bar .hint {
+        margin-bottom: 0;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 13px;
+        color: var(--text3);
+      }
+      .sticky-bar {
+        position: sticky;
+        top: -16px;
+        z-index: 10;
+        background: var(--bg);
+        margin: -16px -16px 8px;
+        padding: 16px 16px 0;
+      }
+      .section-divider {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 14px 0 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+      .section-divider::before,
+      .section-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+      }
+      .folder-card-wrap {
+        cursor: pointer;
+        transition: background 0.15s;
+      }
+      .folder-card-wrap:hover {
+        background: var(--bg2);
+      }
+
+      /* 打标进度 */
+      .batch-progress-view {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 40px;
+      }
+      .batch-progress-info {
+        text-align: center;
+      }
+      .batch-progress-title {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        letter-spacing: 0.06em;
+      }
+      .batch-progress-count {
+        font-size: 34px;
+        color: var(--accent);
+        margin-bottom: 4px;
+        font-variant-numeric: tabular-nums;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+      .batch-progress-name {
+        font-size: 13px;
+        color: var(--text3);
+        max-width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: "Consolas", "Monaco", monospace;
+      }
+      .batch-progress-view .progress-bar {
+        width: 60%;
+        max-width: 500px;
+      }
+
+      /* 批量审核 */
+      .batch-review {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .batch-review-bar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 48px;
+        background: var(--bg);
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .batch-review-bar h3 {
+        font-size: 15px;
+        font-weight: 500;
+        white-space: nowrap;
+        letter-spacing: 0.05em;
+      }
+      .batch-review-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+      .batch-review-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      .batch-review-grid {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0;
+      }
+      .batch-review-panel {
+        width: 400px;
+        flex-shrink: 0;
+        overflow-y: auto;
+        padding: 14px 16px;
+        background: var(--bg);
+        border-left: 1px solid var(--border);
+      }
+      .batch-review-grid .tag-stats-panel {
+        margin: 8px;
+      }
+      .batch-review-panel .preview {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      .batch-review-panel .chips {
+        margin-bottom: 10px;
+      }
+      .batch-review-panel .add-row {
+        display: flex;
+        gap: 6px;
+      }
+
+      /* 标签频率 */
+      .batch-multi-tags {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        margin-top: 10px;
+      }
+      .batch-multi-tag {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        cursor: pointer;
+        font-size: 14px;
+        transition: border-color 0.15s;
+      }
+      .batch-multi-tag:hover {
+        border-color: var(--border2);
+      }
+      .batch-multi-tag input[type="checkbox"] {
+        flex-shrink: 0;
+        cursor: pointer;
+        accent-color: var(--accent);
+      }
+      .batch-multi-tag span {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .batch-multi-tag .count {
+        flex: 0 0 auto;
+        font-size: 12px;
+        color: var(--text3);
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 顶栏 -->
+      <div class="topbar">
+        <h1>打标工具</h1>
+        <span class="badge">{{ modelText }}</span>
+        <select
+          v-if="models.length"
+          class="model-select"
+          :value="activeId"
+          @change="switchModel($event.target.value)"
+        >
+          <option v-for="m in models" :key="m.id" :value="m.id">
+            {{ m.name }}
+          </option>
+        </select>
+        <button class="btn btn-sm btn-ghost" @click="addModel">添加模型</button>
+        <button
+          v-if="models.length"
+          class="btn btn-sm btn-ghost"
+          @click="manageOpen=true"
+        >
+          管理
+        </button>
+        <span v-if="images.length" class="badge" style="background: var(--bg3)"
+          >{{ images.length }} 张图片</span
+        >
+      </div>
+
+      <!-- 模型管理 -->
+      <div class="modal-mask" v-if="manageOpen">
+        <div class="modal" style="width: 600px">
+          <div class="modal-head">
+            <h3>模型管理</h3>
+            <button class="btn btn-sm btn-ghost" @click="manageOpen=false">
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <div v-if="!models.length" class="empty" style="padding: 24px">
+              尚未添加任何模型
+            </div>
+            <div v-for="m in models" :key="m.id" class="model-row">
+              <div class="model-info">
+                <span class="model-name"
+                  >{{ m.name }}<span v-if="m.id===activeId" class="tag-pill"
+                    >当前</span
+                  ></span
+                >
+                <span class="model-dir">{{ m.dir }}</span>
+              </div>
+              <div class="model-actions">
+                <button
+                  v-if="m.id!==activeId"
+                  class="btn btn-sm"
+                  @click="switchModel(m.id)"
+                >
+                  切换
+                </button>
+                <button
+                  class="btn btn-sm btn-danger"
+                  @click="deleteModel(m.id)"
+                >
+                  删除
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn" @click="manageOpen=false">关闭</button>
+            <button
+              class="btn btn-primary"
+              @click="manageOpen=false; addModel()"
+            >
+              添加模型
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 模型选择 -->
+      <div class="modal-mask" v-if="detectOpen">
+        <div class="modal" style="width: 600px">
+          <div class="modal-head">
+            <h3>找到多个模型</h3>
+            <button class="btn btn-sm btn-ghost" @click="detectOpen=false">
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <p class="hint">
+              在该目录下找到 {{ detectResults.length }} 个模型，请选择要添加的：
+            </p>
+            <div
+              v-for="d in detectResults"
+              :key="d"
+              class="dir-item"
+              @click="doAddModel(d)"
+            >
+              <span style="word-break: break-all">{{ d }}</span>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn" @click="detectOpen=false">取消</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="body" v-show="!batchReviewMode">
+        <!-- 侧栏 -->
+        <div class="sidebar">
+          <div class="section-title">默认工作目录</div>
+          <div class="field">
+            <label>工作目录路径</label>
+            <div class="row">
+              <input
+                type="text"
+                v-model="defaultWorkspace"
+                placeholder="设置后打开自动显示目录内文件夹"
+                readonly
+              />
+              <button
+                class="btn"
+                @click="selectWorkspace"
+                style="flex: 0 0 auto"
+              >
+                选择
+              </button>
+              <button
+                class="btn btn-danger"
+                @click="clearWorkspace"
+                style="flex: 0 0 auto"
+                v-if="defaultWorkspace"
+              >
+                清除
+              </button>
+            </div>
+          </div>
+
+          <div class="section-title">数据文件夹</div>
+          <div class="field">
+            <label>当前文件夹</label>
+            <div class="row">
+              <input
+                type="text"
+                v-model="folder"
+                placeholder="点击右侧选择文件夹…"
+                readonly
+              />
+              <button
+                class="btn"
+                @click="openBrowser('data')"
+                style="flex: 0 0 auto"
+              >
+                选择
+              </button>
+            </div>
+          </div>
+          <button
+            class="btn btn-block"
+            @click="scan"
+            :disabled="!folder || scanning"
+          >
+            {{ scanning ? '扫描中…' : '扫描图片' }}
+          </button>
+
+          <div class="section-title">标签管理</div>
+          <button
+            class="btn btn-block"
+            :class="{'btn-primary': manageMode}"
+            @click="toggleManageMode"
+            :disabled="!images.length"
+          >
+            {{ manageMode ? '退出管理' : '进入标签管理' }}
+          </button>
+
+          <div class="section-title">打标设置</div>
+          <div class="field">
+            <label>触发词（Trigger）</label>
+            <input
+              type="text"
+              v-model="trigger"
+              placeholder="如 tuercha_character"
+            />
+          </div>
+          <div class="field">
+            <label
+              >通用标签阈值<span
+                style="color: var(--text2); font-weight: normal"
+                >（值越低识别的标签越多，但可能不准确）</span
+              ></label
+            >
+            <div class="range-row">
+              <input
+                type="range"
+                min="0.05"
+                max="0.95"
+                step="0.05"
+                v-model.number="generalThreshold"
+                :style="{ '--pct': ((generalThreshold - 0.05) / (0.95 - 0.05) * 100) + '%' }"
+              />
+              <span class="val">{{ generalThreshold.toFixed(2) }}</span>
+            </div>
+          </div>
+          <div class="field">
+            <label
+              >角色标签阈值<span
+                style="color: var(--text2); font-weight: normal"
+                >（值越低识别的角色标签越多，但可能不准确）</span
+              ></label
+            >
+            <div class="range-row">
+              <input
+                type="range"
+                min="0.05"
+                max="0.99"
+                step="0.01"
+                v-model.number="characterThreshold"
+                :style="{ '--pct': ((characterThreshold - 0.05) / (0.99 - 0.05) * 100) + '%' }"
+              />
+              <span class="val">{{ characterThreshold.toFixed(2) }}</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>前缀标签（每张图标签前自动添加的固定词）</label>
+            <input
+              type="text"
+              v-model="prefix"
+              placeholder="如：best quality, score_7, safe"
+            />
+          </div>
+          <div class="check">
+            <input type="checkbox" id="af" v-model="normalizeFormat" />
+            <label for="af">专用格式（下划线转空格）</label>
+          </div>
+          <div class="check">
+            <input type="checkbox" id="ic" v-model="includeCharacter" />
+            <label for="ic">包含角色标签（识别特定角色名）</label>
+          </div>
+          <div class="check">
+            <input type="checkbox" id="ow" v-model="overwrite" />
+            <label for="ow">覆盖已有标签文件（不勾选则跳过已打标的图片）</label>
+          </div>
+
+          <div class="section-title">翻译设置</div>
+          <button
+            class="btn btn-block"
+            style="margin-bottom: 10px"
+            @click="translateOpen=true"
+          >
+            翻译 API 设置
+          </button>
+          <button
+            class="btn btn-block"
+            style="margin-bottom: 10px"
+            @click="openDict"
+          >
+            翻译词库管理
+          </button>
+          <button
+            class="btn btn-block"
+            style="margin-bottom: 10px"
+            :disabled="translatingWs"
+            @click="translateWorkspace"
+          >
+            {{ translatingWs ? '翻译中…' : '一键翻译工作目录' }}
+          </button>
+          <button
+            class="btn btn-block btn-danger"
+            style="margin-bottom: 10px"
+            v-if="translatingWs"
+            @click="cancelTranslate"
+          >
+            取消翻译
+          </button>
+          <button
+            class="btn btn-block"
+            style="margin-bottom: 10px"
+            v-if="translatingWs"
+            @click="openProgress"
+          >
+            翻译进度
+          </button>
+
+          <div class="section-title">批量操作</div>
+          <button
+            class="btn btn-primary btn-block"
+            @click="startBatchTag"
+            :disabled="!canBatch"
+          >
+            {{ batchTagging ? '打标中…' : '一键批量打标' }}
+          </button>
+        </div>
+
+        <!-- 主区 -->
+        <div class="main">
+          <!-- 工作目录 -->
+          <template v-if="workspaceView && defaultWorkspace">
+            <div class="sticky-bar">
+              <div class="workspace-bar">
+                <button
+                  v-if="workspaceNavPath"
+                  class="btn btn-sm"
+                  @click="backToParentFolder"
+                >
+                  返回上级
+                </button>
+                <span class="hint"
+                  >{{ workspaceNavPath || ('工作目录：' + defaultWorkspace)
+                  }}</span
+                >
+              </div>
+              <div
+                v-if="!workspaceLoading && !batchTagging && images.length && batchSelectMode"
+                class="manage-bar"
+              >
+                <span class="manage-count"
+                  >已选 {{ batchSelectedCount }} / {{ images.length }} 张</span
+                >
+                <button class="btn btn-sm" @click="batchSelectAll">全选</button>
+                <button
+                  class="btn btn-sm"
+                  v-if="batchSelectedCount"
+                  @click="batchDeselectAll"
+                >
+                  取消全选
+                </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  @click="confirmBatchSelect"
+                  :disabled="!batchSelectedCount"
+                >
+                  开始打标
+                </button>
+                <button class="btn btn-sm" @click="cancelBatchSelect">
+                  取消
+                </button>
+              </div>
+              <div
+                v-if="!workspaceLoading && !batchTagging && images.length && manageMode"
+                class="manage-bar"
+              >
+                <span class="manage-count"
+                  >已选 {{ selectedCount }} / {{ images.length }} 张</span
+                >
+                <button class="btn btn-sm" @click="selectAll">全选</button>
+                <button
+                  class="btn btn-sm"
+                  v-if="selectedCount"
+                  @click="deselectAll"
+                >
+                  {{ selectedCount === images.length ? '取消全选' :
+                  '取消当前选中' }}
+                </button>
+              </div>
+            </div>
+            <div v-if="workspaceLoading" class="empty">加载中…</div>
+            <!-- 打标进度 -->
+            <div v-else-if="batchTagging" class="batch-progress-view">
+              <div class="batch-progress-info">
+                <div class="batch-progress-title">正在识别标签…</div>
+                <div class="batch-progress-count">
+                  {{ batchProgressIndex }} / {{ batchProgressTotal }}
+                </div>
+                <div class="batch-progress-name">{{ batchProgressName }}</div>
+              </div>
+              <div class="progress-bar">
+                <div :style="{ width: batchProgressPct + '%' }"></div>
+              </div>
+            </div>
+            <template v-else>
+              <!-- 子文件夹 -->
+              <div v-if="workspaceFolders.length" class="grid">
+                <div
+                  class="card folder-card-wrap"
+                  v-for="f in workspaceFolders"
+                  :key="f.path"
+                  @click="enterWorkspaceFolder(f.path)"
+                >
+                  <div class="folder-card">
+                    <div class="name" :title="f.name">{{ f.name }}</div>
+                    <div class="meta">{{ f.count }} 张图片</div>
+                  </div>
+                </div>
+              </div>
+              <!-- 分隔 -->
+              <div
+                v-if="workspaceFolders.length && images.length"
+                class="section-divider"
+              >
+                当前文件夹图片
+              </div>
+              <!-- 图片 -->
+              <template v-if="images.length">
+                <!-- 标签统计 -->
+                <div
+                  v-if="tagStats.length || tagStatsLoading"
+                  class="tag-stats-panel"
+                >
+                  <div class="hint">
+                    标签统计（按出现次数排序，点击筛选图片）
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="margin-left: 8px"
+                      @click="translateStatsTags"
+                      :disabled="translatingStats"
+                      v-if="tagStats.some(t => !globalTranslations[t.name])"
+                    >
+                      {{ translatingStats ? '翻译中…' : '翻译' }}
+                    </button>
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="margin-left: 4px"
+                      @click="showStatsTranslated = !showStatsTranslated"
+                    >
+                      {{ showStatsTranslated ? '切换到英文' : '切换到中文' }}
+                    </button>
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="margin-left: 4px"
+                      @click="showTagEditWarning"
+                      v-if="!tagEditMode"
+                    >
+                      编辑标签
+                    </button>
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="margin-left: 4px"
+                      @click="cancelTagEdit"
+                      v-if="tagEditMode && !pendingDeleteCount"
+                    >
+                      完成编辑
+                    </button>
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="
+                        margin-left: 4px;
+                        color: var(--red);
+                        border-color: var(--red);
+                      "
+                      @click="confirmTagDeletions"
+                      v-if="tagEditMode && pendingDeleteCount"
+                    >
+                      确认删除({{ pendingDeleteCount }})
+                    </button>
+                    <button
+                      class="btn btn-sm btn-ghost"
+                      style="margin-left: 4px"
+                      @click="cancelTagEdit"
+                      v-if="tagEditMode && pendingDeleteCount"
+                    >
+                      取消
+                    </button>
+                  </div>
+                  <div class="tag-stats-chips">
+                    <span
+                      class="tag-stat-chip"
+                      v-for="t in tagStats"
+                      :key="t.name"
+                      :class="{active: selectedTags[t.name], 'pending-delete': pendingTagDeletions[t.name]}"
+                      @click="toggleTagFilter(t.name)"
+                    >
+                      <span
+                        v-if="showStatsTranslated && globalTranslations[t.name]"
+                        >{{ globalTranslations[t.name] }}</span
+                      >
+                      <span v-else>{{ t.name }}</span>
+                      <span class="count">{{ t.count }}</span>
+                      <span
+                        v-if="tagEditMode"
+                        class="tag-delete-x"
+                        @click.stop="togglePendingDelete(t.name)"
+                        >{{ pendingTagDeletions[t.name] ? '✓' : '✕' }}</span
+                      >
+                    </span>
+                  </div>
+                </div>
+                <!-- 图片网格 -->
+                <div class="grid">
+                  <div
+                    class="card"
+                    :class="{selected: (manageMode && selectedPaths[img.path]) || (batchSelectMode && batchSelectedPaths[img.path])}"
+                    v-for="img in (manageMode ? filteredImages : images)"
+                    :key="img.path"
+                    @click="onCardClick(img)"
+                  >
+                    <div
+                      v-if="manageMode || batchSelectMode"
+                      class="card-check"
+                      :class="{checked: manageMode ? selectedPaths[img.path] : batchSelectedPaths[img.path]}"
+                    >
+                      ✓
+                    </div>
+                    <img
+                      :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
+                      loading="lazy"
+                    />
+                    <div class="info">
+                      <div class="name" :title="img.name">{{ img.name }}</div>
+                      <div class="meta">
+                        <span class="tag-pill" :class="{none: !img.has_tags}"
+                          >{{ img.has_tags ? '已打标' : '未打标' }}</span
+                        >
+                        <span
+                          class="tag-count"
+                          v-if="img.has_tags && img.tag_count"
+                          >{{ img.tag_count }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+              <!-- 空状态 -->
+              <div
+                v-if="!workspaceFolders.length && !images.length"
+                class="empty"
+              >
+                此文件夹下没有图片
+              </div>
+            </template>
+          </template>
+          <!-- 图片网格 -->
+          <template v-else>
+            <div class="sticky-bar">
+              <div v-if="defaultWorkspace" class="workspace-bar">
+                <button class="btn btn-sm" @click="backToWorkspace">
+                  返回工作目录
+                </button>
+              </div>
+              <div v-if="batchSelectMode" class="manage-bar">
+                <span class="manage-count"
+                  >已选 {{ batchSelectedCount }} / {{ images.length }} 张</span
+                >
+                <button class="btn btn-sm" @click="batchSelectAll">全选</button>
+                <button
+                  class="btn btn-sm"
+                  v-if="batchSelectedCount"
+                  @click="batchDeselectAll"
+                >
+                  取消全选
+                </button>
+                <button
+                  class="btn btn-sm btn-primary"
+                  @click="confirmBatchSelect"
+                  :disabled="!batchSelectedCount"
+                >
+                  开始打标
+                </button>
+                <button class="btn btn-sm" @click="cancelBatchSelect">
+                  取消
+                </button>
+              </div>
+              <div
+                v-if="images.length && !batchTagging && manageMode"
+                class="manage-bar"
+              >
+                <span class="manage-count"
+                  >已选 {{ selectedCount }} / {{ images.length }} 张</span
+                >
+                <button class="btn btn-sm" @click="selectAll">全选</button>
+                <button
+                  class="btn btn-sm"
+                  v-if="selectedCount"
+                  @click="deselectAll"
+                >
+                  {{ selectedCount === images.length ? '取消全选' :
+                  '取消当前选中' }}
+                </button>
+              </div>
+            </div>
+            <!-- 打标进度 -->
+            <div v-if="batchTagging" class="batch-progress-view">
+              <div class="batch-progress-info">
+                <div class="batch-progress-title">正在识别标签…</div>
+                <div class="batch-progress-count">
+                  {{ batchProgressIndex }} / {{ batchProgressTotal }}
+                </div>
+                <div class="batch-progress-name">{{ batchProgressName }}</div>
+              </div>
+              <div class="progress-bar">
+                <div :style="{ width: batchProgressPct + '%' }"></div>
+              </div>
+            </div>
+            <div v-if="!images.length && !batchTagging" class="empty">
+              {{ folder ? '未扫描到图片，请点击「扫描图片」' : (defaultWorkspace
+              ? '请从工作目录中选择文件夹，或在左侧手动选择' :
+              '请先在左侧选择数据文件夹') }}
+            </div>
+            <template v-else-if="images.length && !batchTagging">
+              <!-- 标签统计 -->
+              <div
+                v-if="tagStats.length || tagStatsLoading"
+                class="tag-stats-panel"
+              >
+                <div class="hint">
+                  标签统计（按出现次数排序，点击筛选图片）
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 8px"
+                    @click="translateStatsTags"
+                    :disabled="translatingStats"
+                    v-if="tagStats.some(t => !globalTranslations[t.name])"
+                  >
+                    {{ translatingStats ? '翻译中…' : '翻译' }}
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="showStatsTranslated = !showStatsTranslated"
+                  >
+                    {{ showStatsTranslated ? '切换到英文' : '切换到中文' }}
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="showTagEditWarning"
+                    v-if="!tagEditMode"
+                  >
+                    编辑标签
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="cancelTagEdit"
+                    v-if="tagEditMode && !pendingDeleteCount"
+                  >
+                    完成编辑
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="
+                      margin-left: 4px;
+                      color: var(--red);
+                      border-color: var(--red);
+                    "
+                    @click="confirmTagDeletions"
+                    v-if="tagEditMode && pendingDeleteCount"
+                  >
+                    确认删除({{ pendingDeleteCount }})
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="cancelTagEdit"
+                    v-if="tagEditMode && pendingDeleteCount"
+                  >
+                    取消
+                  </button>
+                </div>
+                <div class="tag-stats-chips">
+                  <span
+                    class="tag-stat-chip"
+                    v-for="t in tagStats"
+                    :key="t.name"
+                    :class="{active: selectedTags[t.name], 'pending-delete': pendingTagDeletions[t.name]}"
+                    @click="toggleTagFilter(t.name)"
+                  >
+                    <span
+                      v-if="showStatsTranslated && globalTranslations[t.name]"
+                      >{{ globalTranslations[t.name] }}</span
+                    >
+                    <span v-else>{{ t.name }}</span>
+                    <span class="count">{{ t.count }}</span>
+                    <span
+                      v-if="tagEditMode"
+                      class="tag-delete-x"
+                      @click.stop="togglePendingDelete(t.name)"
+                      >{{ pendingTagDeletions[t.name] ? '✓' : '✕' }}</span
+                    >
+                  </span>
+                </div>
+              </div>
+              <!-- 图片网格 -->
+              <div class="grid">
+                <div
+                  class="card"
+                  :class="{selected: (manageMode && selectedPaths[img.path]) || (batchSelectMode && batchSelectedPaths[img.path])}"
+                  v-for="img in (manageMode ? filteredImages : images)"
+                  :key="img.path"
+                  @click="onCardClick(img)"
+                >
+                  <div
+                    v-if="manageMode || batchSelectMode"
+                    class="card-check"
+                    :class="{checked: manageMode ? selectedPaths[img.path] : batchSelectedPaths[img.path]}"
+                  >
+                    ✓
+                  </div>
+                  <img
+                    :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
+                    loading="lazy"
+                  />
+                  <div class="info">
+                    <div class="name" :title="img.name">{{ img.name }}</div>
+                    <div class="meta">
+                      <span class="tag-pill" :class="{none: !img.has_tags}"
+                        >{{ img.has_tags ? '已打标' : '未打标' }}</span
+                      >
+                      <span
+                        class="tag-count"
+                        v-if="img.has_tags && img.tag_count"
+                        >{{ img.tag_count }}</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </template>
+        </div>
+      </div>
+
+      <!-- 批量审核 -->
+      <template v-if="batchReviewMode">
+        <div class="batch-review">
+          <!-- 顶栏 -->
+          <div class="batch-review-bar">
+            <h3>批量审核（{{ batchImages.length }} 张图片）</h3>
+            <div class="batch-review-actions">
+              <button class="btn btn-sm" @click="batchToggleMultiMode">
+                {{ batchMultiMode ? '单张模式' : '多选模式' }}
+              </button>
+              <button
+                class="btn btn-sm btn-ghost"
+                @click="batchShowTranslated = !batchShowTranslated"
+              >
+                {{ batchShowTranslated ? '切换到英文' : '切换到中文' }}
+              </button>
+              <button
+                class="btn btn-sm btn-ghost"
+                @click="batchTranslateTags"
+                :disabled="batchTranslating"
+                v-if="batchHasUntranslated"
+              >
+                {{ batchTranslating ? '翻译中…' : '翻译' }}
+              </button>
+              <button class="btn btn-danger" @click="discardBatchResults">
+                不保存此次结果
+              </button>
+              <button class="btn btn-primary" @click="saveBatchResults">
+                保存此次结果
+              </button>
+            </div>
+          </div>
+          <!-- 主体 -->
+          <div class="batch-review-body">
+            <!-- 左侧 -->
+            <div class="batch-review-grid">
+              <!-- 标签统计 -->
+              <div class="tag-stats-panel" v-if="batchTagStats.length">
+                <div class="hint">
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    @click="translateBatchStatsTags"
+                    :disabled="batchTranslatingStats"
+                    v-if="batchStatsHasUntranslated"
+                  >
+                    {{ batchTranslatingStats ? '翻译中…' : '翻译' }}
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="batchShowStatsTranslated = !batchShowStatsTranslated"
+                  >
+                    {{ batchShowStatsTranslated ? '切换到英文' : '切换到中文' }}
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="batchTagEditMode = true"
+                    v-if="!batchTagEditMode"
+                  >
+                    编辑标签
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="cancelBatchTagEdit"
+                    v-if="batchTagEditMode && !batchPendingDeleteCount"
+                  >
+                    完成编辑
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="
+                      margin-left: 4px;
+                      color: var(--red);
+                      border-color: var(--red);
+                    "
+                    @click="confirmBatchTagDeletions"
+                    v-if="batchTagEditMode && batchPendingDeleteCount"
+                  >
+                    确认删除({{ batchPendingDeleteCount }})
+                  </button>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-left: 4px"
+                    @click="cancelBatchTagEdit"
+                    v-if="batchTagEditMode && batchPendingDeleteCount"
+                  >
+                    取消
+                  </button>
+                </div>
+                <div class="tag-stats-chips">
+                  <span
+                    class="tag-stat-chip"
+                    v-for="t in batchTagStats"
+                    :key="t.name"
+                    :class="{active: batchSelectedTags[t.name], 'pending-delete': batchPendingDeletions[t.name]}"
+                    @click="toggleBatchTagFilter(t.name)"
+                  >
+                    <span
+                      v-if="batchShowStatsTranslated && globalTranslations[t.name]"
+                      >{{ globalTranslations[t.name] }}</span
+                    >
+                    <span v-else>{{ t.name }}</span>
+                    <span class="count">{{ t.count }}</span>
+                    <span
+                      v-if="batchTagEditMode"
+                      class="tag-delete-x"
+                      @click.stop="toggleBatchPendingDelete(t.name)"
+                      >{{ batchPendingDeletions[t.name] ? '✓' : '✕' }}</span
+                    >
+                  </span>
+                </div>
+              </div>
+              <div v-if="batchMultiMode" class="manage-bar">
+                <span class="manage-count"
+                  >已选 {{ batchMultiSelectedCount }} / {{ batchImages.length }}
+                  张</span
+                >
+                <button class="btn btn-sm" @click="batchMultiSelectAll">
+                  全选
+                </button>
+                <button
+                  class="btn btn-sm"
+                  v-if="batchMultiSelectedCount"
+                  @click="batchMultiDeselectAll"
+                >
+                  取消全选
+                </button>
+              </div>
+              <div class="grid">
+                <div
+                  class="card"
+                  :class="{selected: batchMultiMode ? batchMultiSelected[img.path] : batchReviewImage && batchReviewImage.path === img.path}"
+                  v-for="img in batchFilteredImages"
+                  :key="img.path"
+                  @click="batchReviewClickImage(img)"
+                >
+                  <div
+                    v-if="batchMultiMode"
+                    class="card-check"
+                    :class="{checked: batchMultiSelected[img.path]}"
+                  >
+                    ✓
+                  </div>
+                  <img
+                    :src="'/api/thumb?path=' + encodeURIComponent(img.path)"
+                    loading="lazy"
+                  />
+                  <div class="info">
+                    <div class="name" :title="img.name">{{ img.name }}</div>
+                    <div class="meta">
+                      <span class="tag-pill"
+                        >{{ (batchResults[img.path] &&
+                        batchResults[img.path].tags || []).length }}
+                        个标签</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- 右侧 -->
+            <div class="batch-review-panel">
+              <!-- 单张 -->
+              <template v-if="!batchMultiMode">
+                <img
+                  v-if="batchReviewImage"
+                  class="preview"
+                  :src="'/api/image?path=' + encodeURIComponent(batchReviewImage.path)"
+                />
+                <div class="hint" v-if="batchReviewImage">
+                  {{ batchReviewImage.name }}
+                  <span
+                    v-if="batchResults[batchReviewImage.path] && batchResults[batchReviewImage.path].skipped"
+                    style="color: var(--text2)"
+                    >（已有标签，未重新识别）</span
+                  >
+                  <span
+                    v-if="batchHasChanges"
+                    style="color: var(--orange); margin-left: 4px"
+                    >（未保存）</span
+                  >
+                </div>
+                <div class="hint" v-else>点击左侧图片查看标签</div>
+                <div class="chips">
+                  <span class="chip" v-for="(t, i) in batchReviewTags" :key="i">
+                    <span v-if="batchShowTranslated && globalTranslations[t]"
+                      >{{ globalTranslations[t] }}</span
+                    >
+                    <span v-else>{{ t }}</span>
+                    <span
+                      class="prob"
+                      v-if="batchReviewImage && batchResults[batchReviewImage.path] && batchResults[batchReviewImage.path].tag_probs && batchResults[batchReviewImage.path].tag_probs[t] != null"
+                      >{{ (batchResults[batchReviewImage.path].tag_probs[t] *
+                      100).toFixed(0) }}%</span
+                    >
+                    <span class="x" @click="batchRemoveTag(i)">✕</span>
+                  </span>
+                  <span v-if="!batchReviewTags.length" class="hint"
+                    >暂无标签</span
+                  >
+                </div>
+                <div class="add-row" v-if="batchReviewImage">
+                  <input
+                    type="text"
+                    v-model="batchNewTag"
+                    placeholder="输入自定义标签后回车添加"
+                    @keyup.enter="batchAddTag"
+                  />
+                  <button class="btn" @click="batchAddTag">添加</button>
+                </div>
+                <!-- 候选 -->
+                <template v-if="batchReviewImage && !batchMultiMode">
+                  <div class="section-title" style="margin-top: 8px">
+                    模型识别候选
+                  </div>
+                  <button
+                    class="btn btn-sm btn-ghost"
+                    style="margin-bottom: 10px"
+                    @click="batchReInfer"
+                    :disabled="batchInferring"
+                  >
+                    {{ batchInferring ? '识别中…' : '重新识别' }}
+                  </button>
+                  <div v-if="batchCandidates.length" class="cand-quick-row">
+                    <button class="btn btn-sm" @click="batchAddTagsByProb(1.0)">
+                      100%+
+                    </button>
+                    <button class="btn btn-sm" @click="batchAddTagsByProb(0.9)">
+                      90%+
+                    </button>
+                    <button class="btn btn-sm" @click="batchAddTagsByProb(0.8)">
+                      80%+
+                    </button>
+                    <button class="btn btn-sm" @click="batchAddTagsByProb(0.5)">
+                      50%+
+                    </button>
+                    <button class="btn btn-sm" @click="batchAddTagsByProb(0)">
+                      全选
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchClearTagsByProb"
+                      v-if="batchHasCandTags"
+                    >
+                      清除选中
+                    </button>
+                  </div>
+                  <div class="cand-list" v-if="batchCandidates.length">
+                    <div
+                      class="cand"
+                      v-for="c in batchCandidates"
+                      :key="c.name"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="batchReviewTags.includes(c.name)"
+                        @change="batchToggleCand(c.name, $event.target.checked)"
+                      />
+                      <span class="cat-tag" :class="'cat-'+c.category"
+                        >{{ c.category===4 ? '角色' : '通用' }}</span
+                      >
+                      <span
+                        style="
+                          flex: 0 0 130px;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          white-space: nowrap;
+                        "
+                        :title="c.name"
+                        ><span
+                          v-if="batchShowTranslated && globalTranslations[c.name]"
+                          >{{ globalTranslations[c.name] }}</span
+                        ><span v-else>{{ c.name }}</span></span
+                      >
+                      <span class="prob-bar"
+                        ><div :style="{width: Math.round(c.prob*100)+'%'}"></div
+                      ></span>
+                      <span class="prob-val"
+                        >{{ (c.prob*100).toFixed(0) }}%</span
+                      >
+                    </div>
+                  </div>
+                </template>
+              </template>
+              <!-- 多选 -->
+              <template v-else>
+                <div class="hint" v-if="!batchMultiSelectedCount">
+                  选择左侧图片查看共同标签
+                </div>
+                <div v-else>
+                  <div class="hint">
+                    标签频率（按数量降序，勾选要保留的标签）
+                    <button
+                      class="btn btn-sm btn-primary"
+                      style="margin-left: 8px"
+                      @click="applyMultiTagsToSelected"
+                      v-if="batchMultiSelectedTagCount"
+                    >
+                      应用到选中图片
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      style="color: var(--red); margin-left: 4px"
+                      @click="batchMultiClearTagsFromSelected"
+                      v-if="batchMultiSelectedTagCount"
+                    >
+                      清除标签
+                    </button>
+                  </div>
+                  <div
+                    v-if="batchMultiTags.length"
+                    class="cand-quick-row"
+                    style="margin-top: 4px"
+                  >
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiAddTagsByProb(1.0)"
+                    >
+                      100%+
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiAddTagsByProb(0.9)"
+                    >
+                      90%+
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiAddTagsByProb(0.8)"
+                    >
+                      80%+
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiAddTagsByProb(0.5)"
+                    >
+                      50%+
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiAddTagsByProb(0)"
+                    >
+                      全选
+                    </button>
+                    <button
+                      class="btn btn-sm"
+                      @click="batchMultiClearSelection"
+                      v-if="batchMultiSelectedTagCount"
+                    >
+                      清除选中
+                    </button>
+                  </div>
+                  <div class="batch-multi-tags">
+                    <label
+                      class="batch-multi-tag"
+                      v-for="t in batchMultiTags"
+                      :key="t.name"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="batchMultiSelectedTags[t.name]"
+                        @change="batchToggleTag(t.name)"
+                      />
+                      <span
+                        v-if="batchShowTranslated && globalTranslations[t.name]"
+                        >{{ globalTranslations[t.name] }}</span
+                      >
+                      <span v-else>{{ t.name }}</span>
+                      <span class="count"
+                        >{{ t.count }}/{{ batchMultiSelectedCount }}</span
+                      >
+                    </label>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+      <div class="modal-mask" v-if="browserOpen">
+        <div class="modal">
+          <div class="modal-head">
+            <h3>
+              {{ browserMode === 'model' ? '选择模型文件夹' : '选择数据文件夹'
+              }}
+            </h3>
+            <button class="btn btn-sm btn-ghost" @click="browserOpen=false">
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="crumb">{{ browserPath || '我的电脑' }}</div>
+            <div
+              v-if="browserParent !== ''"
+              class="dir-item"
+              @click="browseTo(browserParent)"
+            >
+              返回上级
+            </div>
+            <div
+              class="dir-item"
+              v-for="d in browserDirs"
+              :key="d.path"
+              @click="browseTo(d.path)"
+            >
+              {{ d.name }}
+            </div>
+            <div
+              v-if="!browserDirs.length && browserPath"
+              class="empty"
+              style="padding: 20px"
+            >
+              没有子文件夹
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn" @click="browserOpen=false">取消</button>
+            <button
+              class="btn btn-primary"
+              @click="pickCurrent"
+              :disabled="!browserPath"
+            >
+              选择此文件夹
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 标签编辑 -->
+      <template v-if="editorOpen">
+        <div class="drawer-mask"></div>
+        <div class="drawer">
+          <div class="drawer-head">
+            <h3>标签编辑</h3>
+          </div>
+          <div class="drawer-body">
+            <img
+              class="preview"
+              :src="'/api/image?path=' + encodeURIComponent(current.path)"
+            />
+            <div class="hint">
+              当前标签
+              <button
+                class="btn btn-sm btn-ghost"
+                style="margin-left: 8px"
+                @click="translateTags"
+                :disabled="translating || !editorTags.length"
+                v-if="editorTags.length && editorTags.some(t => !globalTranslations[t])"
+              >
+                {{ translating ? '翻译中…' : '翻译' }}
+              </button>
+              <button
+                class="btn btn-sm btn-ghost"
+                style="margin-left: 4px"
+                v-if="editorTags.length"
+                @click="showTranslated = !showTranslated"
+              >
+                {{ showTranslated ? '切换到英文' : '切换到中文' }}
+              </button>
+            </div>
+            <div class="chips">
+              <span
+                class="chip"
+                v-for="(t,i) in editorTags"
+                :key="i"
+                :class="{'chip-highlight': highlightTags.includes(t)}"
+              >
+                <span v-if="showTranslated && tagTranslations[t]"
+                  >{{ tagTranslations[t] }}</span
+                >
+                <span v-else>{{ t }}</span>
+                <span class="prob" v-if="editorTagProbs[t] != null"
+                  >{{ (editorTagProbs[t] * 100).toFixed(0) }}%</span
+                >
+                <span class="x" @click="editorTags.splice(i,1)">✕</span>
+              </span>
+              <span v-if="!editorTags.length" class="hint">暂无标签</span>
+            </div>
+            <div class="add-row">
+              <input
+                type="text"
+                v-model="newTag"
+                placeholder="输入自定义标签后回车添加"
+                @keyup.enter="addTag"
+              />
+              <button class="btn" @click="addTag">添加</button>
+            </div>
+
+            <div class="section-title" style="margin-top: 8px">
+              模型识别候选
+            </div>
+            <button
+              class="btn btn-sm btn-ghost"
+              style="margin-bottom: 10px"
+              @click="reInfer"
+              :disabled="inferring"
+            >
+              {{ inferring ? '识别中…' : '重新识别' }}
+            </button>
+            <button
+              class="btn btn-sm btn-ghost"
+              style="margin-bottom: 10px; margin-left: 8px"
+              @click="translateCandidates"
+              :disabled="translatingCands"
+              v-if="candidates.length && candidates.some(c => !globalTranslations[c.name])"
+            >
+              {{ translatingCands ? '翻译中…' : '翻译' }}
+            </button>
+            <button
+              class="btn btn-sm btn-ghost"
+              v-if="candidates.length"
+              style="margin-bottom: 10px; margin-left: 4px"
+              @click="showCandTranslated = !showCandTranslated"
+            >
+              {{ showCandTranslated ? '切换到英文' : '切换到中文' }}
+            </button>
+            <div v-if="candidates.length" class="cand-quick-row">
+              <button class="btn btn-sm" @click="addTagsByProb(1.0)">
+                100%+
+              </button>
+              <button class="btn btn-sm" @click="addTagsByProb(0.9)">
+                90%+
+              </button>
+              <button class="btn btn-sm" @click="addTagsByProb(0.8)">
+                80%+
+              </button>
+              <button class="btn btn-sm" @click="addTagsByProb(0.5)">
+                50%+
+              </button>
+              <button class="btn btn-sm" @click="addTagsByProb(0)">全选</button>
+            </div>
+            <div class="cand-list" v-if="candidates.length">
+              <div class="cand" v-for="c in candidates" :key="c.name">
+                <input
+                  type="checkbox"
+                  :checked="editorTags.includes(c.name)"
+                  @change="toggleCand(c.name, $event.target.checked)"
+                />
+                <span class="cat-tag" :class="'cat-'+c.category"
+                  >{{ c.category===4 ? '角色' : '通用' }}</span
+                >
+                <span
+                  style="
+                    flex: 0 0 130px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                  "
+                  :title="c.name"
+                  ><span v-if="showCandTranslated && globalTranslations[c.name]"
+                    >{{ globalTranslations[c.name] }}</span
+                  ><span v-else>{{ c.name }}</span></span
+                >
+                <span class="prob-bar"
+                  ><div :style="{width: Math.round(c.prob*100)+'%'}"></div
+                ></span>
+                <span class="prob-val">{{ (c.prob*100).toFixed(0) }}%</span>
+              </div>
+            </div>
+            <div v-else class="hint">暂无候选标签</div>
+          </div>
+          <div class="drawer-foot">
+            <button class="btn btn-danger" @click="clearTags">清空</button>
+            <button class="btn" @click="editorOpen=false">取消</button>
+            <button class="btn btn-primary" style="flex: 1" @click="saveTags">
+              保存标签
+            </button>
+          </div>
+        </div>
+      </template>
+
+      <!-- 翻译设置 -->
+      <div class="modal-mask" v-if="translateOpen">
+        <div class="modal">
+          <div class="modal-head">
+            <h3>翻译 API 设置</h3>
+            <button class="btn btn-sm btn-ghost" @click="translateOpen=false">
+              ✕
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="tr-field">
+              <label>提供商</label>
+              <select v-model="trProvider" @change="onProviderChange">
+                <option value="openai">OpenAI</option>
+                <option value="openai-response">OpenAI Responses API</option>
+                <option value="gemini">Google Gemini</option>
+                <option value="anthropic">Anthropic Claude</option>
+                <option value="azure">Azure OpenAI</option>
+                <option value="new-api">New API</option>
+                <option value="cherryin">CherryIN</option>
+                <option value="ollama">Ollama（本地）</option>
+              </select>
+            </div>
+            <div class="tr-field">
+              <label>API 地址（只需填到域名，后缀自动补全）</label>
+              <input
+                type="text"
+                v-model="trEndpoint"
+                :placeholder="trProvider === 'azure' ? 'https://你的资源名.openai.azure.com/openai/deployments/...' : 'https://api.openai.com'"
+              />
+              <div
+                class="tr-endpoint-hint"
+                v-if="trEndpoint && getFullEndpoint() !== trEndpoint.trim()"
+              >
+                完整地址：{{ getFullEndpoint() }}
+              </div>
+            </div>
+            <div class="tr-field">
+              <label>API 密钥</label>
+              <input type="password" v-model="trApiKey" placeholder="sk-..." />
+            </div>
+            <div class="tr-field">
+              <label>模型名称</label>
+              <div class="tr-model-row">
+                <input
+                  type="text"
+                  v-model="trModel"
+                  placeholder="gpt-4o-mini"
+                />
+                <button
+                  class="btn btn-sm"
+                  @click="detectModels"
+                  :disabled="detecting"
+                >
+                  {{ detecting ? '检测中…' : '检测模型' }}
+                </button>
+              </div>
+              <div class="tr-model-list" v-if="trModels.length">
+                <span
+                  class="tr-model-chip"
+                  v-for="m in trModels"
+                  :key="m"
+                  :class="{active: m === trModel}"
+                  @click="trModel = m"
+                  >{{ m }}</span
+                >
+              </div>
+            </div>
+            <div class="tr-field">
+              <label>翻译提示词（用于指导AI翻译标签）</label>
+              <textarea v-model="trPrompt" rows="4"></textarea>
+            </div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn" @click="translateOpen=false">取消</button>
+            <button
+              class="btn btn-primary"
+              style="flex: 1"
+              @click="saveTranslateConfig"
+            >
+              保存
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 词库管理 -->
+      <div class="modal-mask" v-if="dictOpen">
+        <div class="modal" style="width: 650px; max-width: 90vw">
+          <div class="modal-head">
+            <h3>翻译词库管理</h3>
+            <button class="btn btn-sm btn-ghost" @click="dictOpen=false">
+              ✕
+            </button>
+          </div>
+          <div
+            class="modal-body"
+            style="display: flex; flex-direction: column; gap: 10px"
+          >
+            <div style="display: flex; align-items: center; gap: 10px">
+              <input
+                type="text"
+                v-model="dictSearch"
+                placeholder="搜索英文或中文…"
+                @input="dictSearchInput"
+                style="flex: 1"
+              />
+              <span
+                style="
+                  color: var(--text2);
+                  font-size: 15px;
+                  white-space: nowrap;
+                "
+                >共 {{ dictTotal }} 条</span
+              >
+              <button class="btn btn-sm" @click="exportDict">导出词库</button>
+              <button class="btn btn-sm" @click="importDict">导入词库</button>
+            </div>
+            <div v-if="dictLoading" class="empty">加载中…</div>
+            <div v-else-if="!dictItems.length" class="empty">无匹配结果</div>
+            <div v-else style="max-height: 50vh; overflow-y: auto">
+              <div
+                v-for="item in dictItems"
+                :key="item.en"
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  padding: 6px 8px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <template v-if="dictEditKey === item.en">
+                  <input
+                    v-model="dictEditEn"
+                    style="
+                      flex: 1;
+                      font-family: monospace;
+                      font-size: 15px;
+                      min-width: 0;
+                    "
+                  />
+                  <input
+                    v-model="dictEditZh"
+                    style="flex: 1; font-size: 15px; min-width: 0"
+                  />
+                  <button
+                    class="btn btn-sm btn-primary"
+                    style="flex: 0 0 auto"
+                    @click="saveEditDict"
+                  >
+                    保存
+                  </button>
+                  <button
+                    class="btn btn-sm"
+                    style="flex: 0 0 auto"
+                    @click="cancelEditDict"
+                  >
+                    取消
+                  </button>
+                </template>
+                <template v-else>
+                  <span
+                    style="
+                      flex: 1;
+                      font-family: monospace;
+                      font-size: 15px;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                    "
+                    :title="item.en"
+                    >{{ item.en }}</span
+                  >
+                  <span
+                    style="
+                      flex: 1;
+                      font-size: 15px;
+                      overflow: hidden;
+                      text-overflow: ellipsis;
+                      white-space: nowrap;
+                    "
+                    :title="item.zh"
+                    >{{ item.zh }}</span
+                  >
+                  <button
+                    class="btn btn-sm"
+                    style="flex: 0 0 auto"
+                    @click="startEditDict(item)"
+                  >
+                    编辑
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    style="flex: 0 0 auto"
+                    @click="deleteDictItem(item.en)"
+                  >
+                    删除
+                  </button>
+                </template>
+              </div>
+            </div>
+            <div
+              v-if="dictTotal > dictPageSize"
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+              "
+            >
+              <button
+                class="btn btn-sm"
+                @click="dictPrev"
+                :disabled="dictPage <= 1"
+              >
+                上一页
+              </button>
+              <span style="font-size: 15px"
+                >第 {{ dictPage }} 页 / 共 {{ Math.ceil(dictTotal /
+                dictPageSize) }} 页</span
+              >
+              <button
+                class="btn btn-sm"
+                @click="dictNext"
+                :disabled="dictPage * dictPageSize >= dictTotal"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 导入模式 -->
+      <div class="modal-mask" v-if="importModeOpen">
+        <div class="modal" style="width: 480px; max-width: 90vw">
+          <div class="modal-head">
+            <h3>选择导入方式</h3>
+            <button class="btn btn-sm btn-ghost" @click="cancelImportMode">
+              ✕
+            </button>
+          </div>
+          <div
+            class="modal-body"
+            style="display: flex; flex-direction: column; gap: 16px"
+          >
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <button
+                class="btn btn-primary"
+                @click="chooseImportMerge"
+                style="padding: 14px; font-size: 15px"
+              >
+                添加到当前词库
+              </button>
+              <span
+                style="color: var(--text2); font-size: 12px; padding-left: 4px"
+              >
+                只导入当前词库中不存在的条目，已有的保留不变
+              </span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <button
+                class="btn btn-danger"
+                @click="chooseImportOverwrite"
+                style="padding: 14px; font-size: 15px"
+              >
+                覆盖当前词库
+              </button>
+              <span
+                style="color: var(--red); font-size: 12px; padding-left: 4px"
+              >
+                会删除当前全部内容
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 覆盖确认 -->
+      <div class="modal-mask" v-if="importConfirmOpen">
+        <div class="modal" style="width: 420px; max-width: 90vw">
+          <div class="modal-head">
+            <h3>确认覆盖</h3>
+            <button class="btn btn-sm btn-ghost" @click="cancelImportConfirm">
+              ✕
+            </button>
+          </div>
+          <div
+            class="modal-body"
+            style="display: flex; flex-direction: column; gap: 12px"
+          >
+            <div style="color: var(--red); font-size: 14px; line-height: 1.6">
+              警告：此操作将删除当前全部词库，不可恢复！<br />
+              请输入“确认覆盖”以继续。
+            </div>
+            <input
+              type="text"
+              v-model="importConfirmText"
+              placeholder="请输入“确认覆盖”"
+              @keydown.enter="confirmOverwriteImport"
+              style="font-size: 15px"
+            />
+            <div style="display: flex; gap: 10px; justify-content: flex-end">
+              <button class="btn" @click="cancelImportConfirm">取消</button>
+              <button class="btn btn-danger" @click="confirmOverwriteImport">
+                确认覆盖
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 标签警告 -->
+      <div class="modal-mask" v-if="tagEditWarning" style="z-index: 200">
+        <div class="modal" style="width: 500px; max-width: 90vw">
+          <div
+            class="modal-body"
+            style="
+              padding: 24px;
+              display: flex;
+              flex-direction: column;
+              gap: 20px;
+            "
+          >
+            <p style="color: var(--text); font-size: 14px; line-height: 1.8">
+              在批量删除的时候有可能会误删除你所需要的标签,这并不是一个很好用的功能,我更建议在打标的时候或单张图片精细化决策,所以请谨慎使用
+            </p>
+            <div style="display: flex; gap: 8px; justify-content: flex-end">
+              <button
+                class="btn"
+                @click="cancelTagEdit"
+                style="padding: 8px 20px"
+              >
+                算了
+              </button>
+              <button
+                class="btn btn-primary"
+                @click="confirmTagEdit"
+                style="padding: 8px 20px"
+              >
+                确定
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 翻译进度 -->
+      <div class="modal-mask" v-if="progressOpen">
+        <div class="modal" style="width: 600px; max-width: 90vw">
+          <div class="modal-head">
+            <h3>翻译进度</h3>
+            <button class="btn btn-sm btn-ghost" @click="closeProgress">
+              ✕
+            </button>
+          </div>
+          <div
+            class="modal-body progress-scroll"
+            style="max-height: 70vh; overflow-y: auto"
+          >
+            <div v-if="!progressItems.length" class="empty">等待模型输出…</div>
+            <div v-else>
+              <div
+                v-for="(item, idx) in progressItems"
+                :key="idx"
+                style="
+                  display: flex;
+                  gap: 8px;
+                  padding: 4px 8px;
+                  border-bottom: 1px solid var(--border);
+                "
+              >
+                <span
+                  style="
+                    font-family: monospace;
+                    font-size: 15px;
+                    color: var(--text2);
+                  "
+                  >{{ item.en }}</span
+                >
+                <span style="font-size: 15px">→</span>
+                <span style="font-size: 15px">{{ item.zh }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" v-if="toast">{{ toast }}</div>
+    </div>
+
+    <script>
+      const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+      createApp({
+        setup() {
+          const folder = ref("");
+          const images = ref([]);
+          const scanning = ref(false);
+
+          // 打标
+          const trigger = ref("");
+          const generalThreshold = ref(0.35);
+          const characterThreshold = ref(0.85);
+          const prefix = ref("");
+          const normalizeFormat = ref(true);
+          const includeCharacter = ref(false);
+          const overwrite = ref(false);
+
+          // 翻译
+          const translateOpen = ref(false);
+          const trProvider = ref("openai");
+          const trEndpoint = ref("");
+          const trApiKey = ref("");
+          const trModel = ref("");
+          const trPrompt = ref("");
+          const trModels = ref([]);
+          const detecting = ref(false);
+          const translating = ref(false);
+          // 翻译缓存
+          const globalTranslations = ref({});
+          // 当前翻译
+          const tagTranslations = computed(() => {
+            const result = {};
+            for (const t of editorTags.value) {
+              if (globalTranslations.value[t])
+                result[t] = globalTranslations.value[t];
+            }
+            return result;
+          });
+          // 是否显示翻译
+          const showTranslated = ref(false);
+          // 批量查询标签
+          async function lookupTranslations(tags) {
+            if (!tags || !tags.length) return;
+            try {
+              const r = await fetch("/api/translate/cache/lookup", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags }),
+              });
+              const d = await r.json();
+              if (d.translations) {
+                globalTranslations.value = {
+                  ...globalTranslations.value,
+                  ...d.translations,
+                };
+              }
+            } catch (e) {}
+          }
+          // 词库
+          const dictOpen = ref(false);
+          const dictSearch = ref("");
+          const dictItems = ref([]);
+          const dictTotal = ref(0);
+          const dictPage = ref(1);
+          const dictPageSize = 50;
+          const dictLoading = ref(false);
+          const dictEditKey = ref(null);
+          const dictEditEn = ref("");
+          const dictEditZh = ref("");
+          // 导入模式
+          const importFile = ref(null);
+          const importModeOpen = ref(false);
+          const importConfirmOpen = ref(false);
+          const importConfirmText = ref("");
+          // 翻译工作目录
+          const translatingWs = ref(false);
+          // 候选翻译
+          const showCandTranslated = ref(false);
+          const translatingCands = ref(false);
+          // 翻译进度
+          const progressOpen = ref(false);
+          const progressItems = ref([]);
+          let progressTimer = null;
+
+          async function cancelTranslate() {
+            try {
+              await fetch("/api/translate/cancel", { method: "POST" });
+            } catch (e) {
+              showToast("取消失败");
+            }
+          }
+
+          function openProgress() {
+            progressOpen.value = true;
+            progressItems.value = [];
+            startProgressPolling();
+          }
+          function closeProgress() {
+            progressOpen.value = false;
+            stopProgressPolling();
+            progressItems.value = [];
+          }
+          function startProgressPolling() {
+            stopProgressPolling();
+            progressTimer = setInterval(async () => {
+              try {
+                const r = await fetch("/api/translate/progress");
+                const d = await r.json();
+                if (d.items && d.items.length) {
+                  progressItems.value.push(...d.items);
+                  nextTick(() => {
+                    const el = document.querySelector(".progress-scroll");
+                    if (el) el.scrollTop = el.scrollHeight;
+                  });
+                }
+              } catch (e) {}
+            }, 500);
+          }
+          function stopProgressPolling() {
+            if (progressTimer) {
+              clearInterval(progressTimer);
+              progressTimer = null;
+            }
+          }
+
+          async function openDict() {
+            dictOpen.value = true;
+            dictSearch.value = "";
+            dictPage.value = 1;
+            await loadDict();
+          }
+          async function loadDict() {
+            dictLoading.value = true;
+            try {
+              const params = new URLSearchParams();
+              if (dictSearch.value) params.set("q", dictSearch.value);
+              params.set("page", dictPage.value);
+              params.set("size", dictPageSize);
+              const r = await fetch("/api/translate/cache/list?" + params);
+              const d = await r.json();
+              dictItems.value = d.items;
+              dictTotal.value = d.total;
+            } catch (e) {
+              showToast("加载词库失败");
+            } finally {
+              dictLoading.value = false;
+            }
+          }
+          async function deleteDictItem(en) {
+            try {
+              await fetch("/api/translate/cache?en=" + encodeURIComponent(en), {
+                method: "DELETE",
+              });
+              delete globalTranslations.value[en];
+              globalTranslations.value = { ...globalTranslations.value };
+              await loadDict();
+            } catch (e) {
+              showToast("删除失败");
+            }
+          }
+          function dictNext() {
+            if (dictPage.value * dictPageSize < dictTotal.value) {
+              dictPage.value++;
+              loadDict();
+            }
+          }
+          function dictPrev() {
+            if (dictPage.value > 1) {
+              dictPage.value--;
+              loadDict();
+            }
+          }
+          function dictSearchInput() {
+            dictPage.value = 1;
+            loadDict();
+          }
+          function startEditDict(item) {
+            dictEditKey.value = item.en;
+            dictEditEn.value = item.en;
+            dictEditZh.value = item.zh;
+          }
+          function cancelEditDict() {
+            dictEditKey.value = null;
+          }
+          async function saveEditDict() {
+            const oldEn = dictEditKey.value;
+            const newEn = dictEditEn.value.trim();
+            const newZh = dictEditZh.value.trim();
+            if (!newEn || !newZh) {
+              showToast("英文和中文都不能为空");
+              return;
+            }
+            try {
+              const r = await fetch("/api/translate/cache", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  old_en: oldEn,
+                  new_en: newEn,
+                  new_zh: newZh,
+                }),
+              });
+              if (!r.ok) {
+                const d = await r.json();
+                throw new Error(d.detail || "保存失败");
+              }
+              // 同步缓存
+              if (oldEn !== newEn) {
+                delete globalTranslations.value[oldEn];
+              }
+              globalTranslations.value[newEn] = newZh;
+              globalTranslations.value = { ...globalTranslations.value };
+              dictEditKey.value = null;
+              await loadDict();
+            } catch (e) {
+              showToast(e.message || "保存失败");
+            }
+          }
+          async function exportDict() {
+            try {
+              const r = await fetch("/api/translate/export");
+              if (!r.ok) throw new Error("导出失败");
+              const blob = await r.blob();
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "tagdict_export.tagdict";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              showToast("导出失败：" + e.message);
+            }
+          }
+          function importDict() {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".tagdict";
+            input.onchange = () => {
+              const file = input.files[0];
+              if (!file) return;
+              importFile.value = file;
+              importModeOpen.value = true;
+            };
+            input.click();
+          }
+          function chooseImportMerge() {
+            importModeOpen.value = false;
+            doImport("merge");
+          }
+          function chooseImportOverwrite() {
+            importModeOpen.value = false;
+            importConfirmOpen.value = true;
+            importConfirmText.value = "";
+          }
+          function cancelImportMode() {
+            importModeOpen.value = false;
+            importFile.value = null;
+          }
+          function cancelImportConfirm() {
+            importConfirmOpen.value = false;
+            importFile.value = null;
+            importConfirmText.value = "";
+          }
+          function confirmOverwriteImport() {
+            if (importConfirmText.value.trim() !== "\u786e\u8ba4\u8986\u76d6") {
+              showToast("请输入“确认覆盖”以确认操作");
+              return;
+            }
+            importConfirmOpen.value = false;
+            importConfirmText.value = "";
+            doImport("overwrite");
+          }
+          async function doImport(mode) {
+            const file = importFile.value;
+            if (!file) return;
+            try {
+              const r = await fetch("/api/translate/import?mode=" + mode, {
+                method: "POST",
+                body: file,
+              });
+              const d = await r.json();
+              if (!r.ok) throw new Error(d.detail || "导入失败");
+              await loadDict();
+            } catch (e) {
+              showToast("导入失败：" + e.message);
+            } finally {
+              importFile.value = null;
+            }
+          }
+          async function translateWorkspace() {
+            if (!defaultWorkspace.value) {
+              showToast("请先设置工作目录");
+              return;
+            }
+            translatingWs.value = true;
+            try {
+              const res = await fetch("/api/translate/workspace", {
+                method: "POST",
+              });
+              const d = await res.json();
+              if (!res.ok) throw new Error(d.detail || "翻译失败");
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              translatingWs.value = false;
+            }
+          }
+          async function translateCandidates() {
+            if (!candidates.value.length) return;
+            await lookupTranslations(candidates.value.map((c) => c.name));
+            const untranslated = candidates.value
+              .map((c) => c.name)
+              .filter((name) => !globalTranslations.value[name]);
+            if (!untranslated.length) {
+              showCandTranslated.value = true;
+              return;
+            }
+            translatingCands.value = true;
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags: untranslated }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "翻译失败");
+              globalTranslations.value = {
+                ...globalTranslations.value,
+                ...data.translations,
+              };
+              showCandTranslated.value = true;
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              translatingCands.value = false;
+            }
+          }
+
+          // API 后缀
+          const PROVIDER_SUFFIXES = {
+            openai: "/v1/chat/completions",
+            "openai-response": "/v1/responses",
+            gemini: "/v1beta",
+            anthropic: "/v1/messages",
+            azure: "",
+            "new-api": "/v1/chat/completions",
+            cherryin: "/v1/chat/completions",
+            ollama: "/api/chat",
+          };
+
+          // 拼 endpoint
+          function getFullEndpoint() {
+            const suffix = PROVIDER_SUFFIXES[trProvider.value] || "";
+            if (!suffix) return trEndpoint.value.trim();
+            const base = trEndpoint.value.trim().replace(/\/+$/, "");
+            // 已有后缀
+            if (base.endsWith(suffix)) return base;
+            // 已有路径
+            try {
+              const u = new URL(base);
+              if (u.pathname && u.pathname !== "/") return base;
+            } catch (e) {
+              return base;
+            }
+            return base + suffix;
+          }
+
+          // 还原 endpoint
+          function stripSuffix(endpoint, provider) {
+            const suffix = PROVIDER_SUFFIXES[provider] || "";
+            if (suffix && endpoint && endpoint.endsWith(suffix)) {
+              return endpoint.slice(0, -suffix.length);
+            }
+            return endpoint || "";
+          }
+
+          // 模型状态
+          const modelLoaded = ref(false);
+          const modelLoading = ref(true);
+          const modelError = ref("");
+          const models = ref([]);
+          const activeId = ref("");
+          const manageOpen = ref(false);
+          const detectOpen = ref(false);
+          const detectResults = ref([]);
+          const modelText = computed(() => {
+            if (modelError.value) return "加载失败";
+            if (modelLoaded.value) return "模型就绪";
+            if (modelLoading.value) return "加载中…";
+            return "未加载";
+          });
+
+          const canBatch = computed(
+            () =>
+              images.value.length &&
+              !batchTagging.value &&
+              !batchReviewMode.value
+          );
+
+          // 文件夹浏览
+          const browserOpen = ref(false);
+          const browserPath = ref("");
+          const browserParent = ref("");
+          const browserDirs = ref([]);
+          const browserMode = ref("data");
+
+          // 标签编辑
+          const editorOpen = ref(false);
+          const current = ref(null);
+          const editorTags = ref([]);
+          const newTag = ref("");
+          const candidates = ref([]);
+          const inferring = ref(false);
+          // 置信度映射
+          const editorTagProbs = ref({});
+
+          // 标签管理
+          const manageMode = ref(false);
+          const selectedPaths = ref({}); // path map
+          const tagStats = ref([]); // tag counts
+          const selectedTags = ref({}); // tag map
+          const tagStatsLoading = ref(false);
+          const imageTagsMap = ref({}); // path tags
+          const highlightTags = ref([]); // 高亮标签
+          const translatingStats = ref(false); // 翻译中
+          // 统计翻译切换
+          const showStatsTranslated = ref(false);
+          // 批量编辑
+          const tagEditWarning = ref(false); // 警告
+          const tagEditMode = ref(false); // 编辑模式
+          const pendingTagDeletions = ref({});
+          const pendingDeleteCount = computed(
+            () =>
+              Object.keys(pendingTagDeletions.value).filter(
+                (k) => pendingTagDeletions.value[k]
+              ).length
+          );
+          // 工作目录
+          const defaultWorkspace = ref("");
+          const workspaceView = ref(false); // 工作目录视图
+          const workspaceFolders = ref([]); // folders
+          const workspaceLoading = ref(false);
+          const workspaceNavPath = ref(""); // 当前路径
+
+          // 批量审核
+          const batchSelectMode = ref(false); // 选图
+          const batchSelectedPaths = ref({}); // path map
+          const batchTagging = ref(false); // 推理中
+          const batchProgressIndex = ref(0);
+          const batchProgressTotal = ref(0);
+          const batchProgressName = ref("");
+          const batchReviewMode = ref(false); // 审核
+          const batchResults = ref({}); // results
+          const batchReviewImage = ref(null); // 当前图
+          const batchReviewTags = ref([]); // 当前标签
+          const batchNewTag = ref(""); // 输入标签
+          const batchMultiMode = ref(false); // 多选
+          const batchMultiSelected = ref({}); // path map
+          const batchMultiTags = ref([]); // tag counts
+          const batchMultiSelectedTags = ref({}); // {tagName: true}
+          const batchShowTranslated = ref(false); // 审核中英文切换
+          const batchTranslating = ref(false); // 审核翻译中
+          // 审核候选
+          const batchCandidates = ref([]);
+          const batchInferring = ref(false);
+          // 审核标签
+          const batchSelectedTags = ref({}); // 筛选标签
+          const batchTagEditMode = ref(false);
+          const batchPendingDeletions = ref({});
+          const batchShowStatsTranslated = ref(false);
+          const batchTranslatingStats = ref(false);
+
+          const batchSelectedCount = computed(
+            () => Object.values(batchSelectedPaths.value).filter(Boolean).length
+          );
+          const batchProgressPct = computed(() =>
+            batchProgressTotal.value
+              ? Math.round(
+                  (batchProgressIndex.value / batchProgressTotal.value) * 100
+                )
+              : 0
+          );
+          const batchImages = computed(() =>
+            images.value.filter((img) => batchResults.value[img.path])
+          );
+          const batchMultiSelectedCount = computed(
+            () => Object.values(batchMultiSelected.value).filter(Boolean).length
+          );
+          // 单张候选选中
+          const batchHasCandTags = computed(() =>
+            batchReviewTags.value.some((t) =>
+              batchCandidates.value.some((c) => c.name === t)
+            )
+          );
+          // 多选标签数
+          const batchMultiSelectedTagCount = computed(
+            () =>
+              Object.keys(batchMultiSelectedTags.value).filter(
+                (k) => batchMultiSelectedTags.value[k]
+              ).length
+          );
+          // 审核未翻译
+          const batchHasUntranslated = computed(() => {
+            let allTags;
+            if (batchMultiMode.value) {
+              allTags = batchMultiTags.value.map((t) => t.name);
+            } else {
+              allTags = [
+                ...new Set([
+                  ...batchReviewTags.value,
+                  ...batchCandidates.value.map((c) => c.name),
+                ]),
+              ];
+            }
+            return allTags.some((t) => !globalTranslations.value[t]);
+          });
+          // 审核标签统计
+          const batchTagStats = computed(() => {
+            const tagCount = {};
+            for (const result of Object.values(batchResults.value)) {
+              const tags = result.tags || [];
+              for (const tag of tags) {
+                tagCount[tag] = (tagCount[tag] || 0) + 1;
+              }
+            }
+            return Object.entries(tagCount)
+              .map(([name, count]) => ({ name, count }))
+              .sort((a, b) => b.count - a.count);
+          });
+          // 待删数量
+          const batchPendingDeleteCount = computed(
+            () =>
+              Object.keys(batchPendingDeletions.value).filter(
+                (k) => batchPendingDeletions.value[k]
+              ).length
+          );
+          // 按标签筛图
+          const batchFilteredImages = computed(() => {
+            const selectedNames = Object.keys(batchSelectedTags.value).filter(
+              (k) => batchSelectedTags.value[k]
+            );
+            if (!selectedNames.length) return batchImages.value;
+            return batchImages.value.filter((img) => {
+              const tags = batchResults.value[img.path]?.tags || [];
+              return selectedNames.every((t) => tags.includes(t));
+            });
+          });
+          // 标签未翻译
+          const batchStatsHasUntranslated = computed(() =>
+            batchTagStats.value.some((t) => !globalTranslations.value[t.name])
+          );
+          // 标签未保存
+          const batchHasChanges = computed(() => {
+            if (!batchReviewImage.value) return false;
+            const path = batchReviewImage.value.path;
+            const saved = batchResults.value[path]?.tags || [];
+            const current = batchReviewTags.value;
+            if (saved.length !== current.length) return true;
+            return !saved.every((t, i) => t === current[i]);
+          });
+
+          const selectedCount = computed(
+            () => Object.values(selectedPaths.value).filter(Boolean).length
+          );
+          const selectedTagNames = computed(() =>
+            Object.keys(selectedTags.value).filter((k) => selectedTags.value[k])
+          );
+          // 过滤图片
+          const filteredImages = computed(() => {
+            const tags = selectedTagNames.value;
+            if (!tags.length) return images.value;
+            return images.value.filter((img) => {
+              const imgTags = imageTagsMap.value[img.path] || [];
+              return tags.every((t) => imgTags.includes(t));
+            });
+          });
+
+          const toast = ref("");
+          let toastTimer = null;
+          function showToast(msg) {
+            toast.value = msg;
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => (toast.value = ""), 2200);
+          }
+
+          async function checkModel() {
+            try {
+              const r = await fetch("/api/model/status");
+              const d = await r.json();
+              modelLoaded.value = d.loaded;
+              modelLoading.value = d.loading;
+              modelError.value = d.error || "";
+              models.value = d.models || [];
+              activeId.value = d.active_id || "";
+              if (d.loading) setTimeout(checkModel, 1000);
+            } catch (e) {
+              setTimeout(checkModel, 1000);
+            }
+          }
+
+          // 添加模型
+          function addModel() {
+            openBrowser("model");
+          }
+          async function detectAndAddModel(path) {
+            try {
+              const r = await fetch(
+                "/api/model/detect?root=" + encodeURIComponent(path)
+              );
+              const d = await r.json();
+              if (d.count === 0) {
+                showToast(
+                  "未在该目录下找到模型（需含 model.onnx 和 selected_tags.csv）"
+                );
+              } else if (d.count === 1) {
+                await doAddModel(d.dirs[0]);
+              } else {
+                detectResults.value = d.dirs;
+                detectOpen.value = true;
+              }
+            } catch (e) {
+              showToast("探测失败：" + e.message);
+            }
+          }
+
+          async function doAddModel(dir) {
+            try {
+              const r = await fetch("/api/model/add", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ dir }),
+              });
+              if (!r.ok) {
+                const d = await r.json().catch(() => ({}));
+                showToast("添加失败：" + (d.detail || r.statusText));
+                return;
+              }
+              detectOpen.value = false;
+              checkModel();
+            } catch (e) {
+              showToast("添加失败：" + e.message);
+            }
+          }
+
+          async function switchModel(id) {
+            try {
+              await fetch("/api/model/switch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id }),
+              });
+              checkModel();
+            } catch (e) {
+              showToast("切换失败：" + e.message);
+            }
+          }
+
+          async function deleteModel(id) {
+            if (!confirm("确认删除该模型记录？（不会删除模型文件）")) return;
+            try {
+              await fetch("/api/model/" + id, { method: "DELETE" });
+              checkModel();
+            } catch (e) {
+              showToast("删除失败：" + e.message);
+            }
+          }
+
+          // 文件夹浏览
+          async function openBrowser(mode) {
+            browserMode.value = mode || "data";
+            browserOpen.value = true;
+            if (mode === "model") {
+              browserPath.value = "";
+            } else if (mode === "workspace") {
+              browserPath.value = defaultWorkspace.value || "";
+            } else {
+              browserPath.value = folder.value || "";
+            }
+            await browseTo(browserPath.value || "");
+          }
+          async function browseTo(path) {
+            try {
+              const r = await fetch(
+                "/api/browse?path=" + encodeURIComponent(path)
+              );
+              const d = await r.json();
+              browserPath.value = d.path;
+              browserParent.value = d.parent;
+              browserDirs.value = d.dirs;
+            } catch (e) {
+              showToast("浏览失败：" + e.message);
+            }
+          }
+          function pickCurrent() {
+            if (browserMode.value === "model") {
+              browserOpen.value = false;
+              detectAndAddModel(browserPath.value);
+            } else if (browserMode.value === "workspace") {
+              browserOpen.value = false;
+              saveWorkspace(browserPath.value);
+            } else {
+              folder.value = browserPath.value;
+              browserOpen.value = false;
+              workspaceView.value = false;
+              scan();
+            }
+          }
+
+          // 扫描
+          async function scan() {
+            scanning.value = true;
+            workspaceView.value = false;
+            // 重置标签状态
+            selectedPaths.value = {};
+            tagStats.value = [];
+            selectedTags.value = {};
+            imageTagsMap.value = {};
+            highlightTags.value = [];
+            try {
+              const r = await fetch(
+                "/api/scan?folder=" + encodeURIComponent(folder.value)
+              );
+              const d = await r.json();
+              images.value = d.images;
+            } catch (e) {
+              showToast("扫描失败：" + e.message);
+            }
+            scanning.value = false;
+          }
+
+          // 批量审核
+          function startBatchTag() {
+            if (!modelLoaded.value) {
+              showToast("模型尚未就绪");
+              return;
+            }
+            if (!images.value.length) {
+              showToast("请先打开数据集文件夹");
+              return;
+            }
+            if (manageMode.value) manageMode.value = false;
+            batchSelectMode.value = true;
+            batchSelectedPaths.value = {};
+          }
+          function batchSelectAll() {
+            const obj = {};
+            images.value.forEach((img) => {
+              obj[img.path] = true;
+            });
+            batchSelectedPaths.value = obj;
+          }
+          function batchDeselectAll() {
+            batchSelectedPaths.value = {};
+          }
+          function batchToggleSelect(path) {
+            const next = { ...batchSelectedPaths.value };
+            if (next[path]) delete next[path];
+            else next[path] = true;
+            batchSelectedPaths.value = next;
+          }
+          function cancelBatchSelect() {
+            batchSelectMode.value = false;
+            batchSelectedPaths.value = {};
+          }
+          async function confirmBatchSelect() {
+            const paths = Object.keys(batchSelectedPaths.value).filter(
+              (k) => batchSelectedPaths.value[k]
+            );
+            if (!paths.length) return;
+            batchSelectMode.value = false;
+            batchTagging.value = true;
+            batchProgressIndex.value = 0;
+            batchProgressTotal.value = paths.length;
+            batchProgressName.value = "";
+            batchResults.value = {};
+            // 固定标签
+            const fixedTags = [];
+            const tr = trigger.value.trim();
+            if (tr) fixedTags.push(tr);
+            const pfx = prefix.value.trim();
+            if (pfx) {
+              pfx.split(",").forEach((s) => {
+                const t = s.trim();
+                if (t && !fixedTags.includes(t)) fixedTags.push(t);
+              });
+            }
+            try {
+              const res = await fetch("/api/tag/selected", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  paths,
+                  trigger: trigger.value,
+                  general_threshold: generalThreshold.value,
+                  character_threshold: characterThreshold.value,
+                  include_character: includeCharacter.value,
+                  normalize: normalizeFormat.value,
+                  overwrite: overwrite.value,
+                  prefix: prefix.value,
+                }),
+              });
+              const reader = res.body.getReader();
+              const decoder = new TextDecoder();
+              let buffer = "";
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n\n");
+                buffer = lines.pop();
+                for (const line of lines) {
+                  if (!line.startsWith("data: ")) continue;
+                  const d = JSON.parse(line.slice(6));
+                  if (d.type === "progress") {
+                    batchProgressIndex.value = d.index;
+                    batchProgressName.value = d.name;
+                    batchResults.value = {
+                      ...batchResults.value,
+                      [d.path]: {
+                        // 新图初始标签
+                        // 跳过保留标签
+                        tags: d.skipped ? d.tags : [...fixedTags],
+                        tag_probs: d.tag_probs || {},
+                        skipped: d.skipped,
+                      },
+                    };
+                  } else if (d.type === "error") {
+                    showToast("出错：" + d.name + " - " + d.error);
+                  }
+                }
+              }
+              batchTagging.value = false;
+              if (Object.keys(batchResults.value).length === 0) {
+                showToast("未能识别任何图片");
+                return;
+              }
+              batchReviewMode.value = true;
+              batchMultiMode.value = false;
+              batchMultiSelected.value = {};
+              batchMultiTags.value = [];
+              batchMultiSelectedTags.value = {};
+              batchReviewImage.value = null;
+              batchReviewTags.value = [];
+              batchShowTranslated.value = false;
+            } catch (e) {
+              showToast("打标失败：" + e.message);
+              batchTagging.value = false;
+            }
+          }
+          function saveCurrentBatchReview() {
+            if (!batchReviewImage.value) return;
+            const path = batchReviewImage.value.path;
+            if (batchResults.value[path]) {
+              batchResults.value = {
+                ...batchResults.value,
+                [path]: {
+                  ...batchResults.value[path],
+                  tags: [...batchReviewTags.value],
+                },
+              };
+            }
+          }
+          // 重新识别
+          async function batchReInfer() {
+            if (!batchReviewImage.value) return;
+            batchInferring.value = true;
+            try {
+              const r = await fetch(
+                "/api/tag/single?path=" +
+                  encodeURIComponent(batchReviewImage.value.path) +
+                  "&top_n=60"
+              );
+              const d = await r.json();
+              batchCandidates.value = d.candidates;
+            } catch (e) {
+              showToast("识别失败：" + e.message);
+            }
+            batchInferring.value = false;
+          }
+          // 阈值替换候选
+          function batchAddTagsByProb(threshold) {
+            if (!batchReviewImage.value || !batchCandidates.value.length)
+              return;
+            const candNames = new Set(batchCandidates.value.map((c) => c.name));
+            // 保留非候选
+            const fixed = batchReviewTags.value.filter(
+              (t) => !candNames.has(t)
+            );
+            // 保留阈值内
+            const matching = batchCandidates.value
+              .filter((c) => c.prob >= threshold)
+              .map((c) => c.name);
+            batchReviewTags.value = [...fixed, ...matching];
+          }
+          // 清候选
+          function batchClearTagsByProb() {
+            const candNames = new Set(batchCandidates.value.map((c) => c.name));
+            batchReviewTags.value = batchReviewTags.value.filter(
+              (t) => !candNames.has(t)
+            );
+          }
+          async function batchReviewClickImage(img) {
+            if (batchMultiMode.value) {
+              const next = { ...batchMultiSelected.value };
+              if (next[img.path]) delete next[img.path];
+              else next[img.path] = true;
+              batchMultiSelected.value = next;
+              computeBatchMultiTags();
+            } else {
+              saveCurrentBatchReview();
+              batchReviewImage.value = img;
+              const result = batchResults.value[img.path];
+              batchReviewTags.value = result ? [...result.tags] : [];
+              // 自动候选
+              if (
+                result &&
+                result.tag_probs &&
+                Object.keys(result.tag_probs).length > 0
+              ) {
+                batchCandidates.value = Object.entries(result.tag_probs)
+                  .map(([name, prob]) => ({ name, prob, category: 0 }))
+                  .sort((a, b) => b.prob - a.prob);
+              } else {
+                batchCandidates.value = [];
+              }
+              // 查翻译
+              const allTags = [
+                ...new Set([
+                  ...batchReviewTags.value,
+                  ...batchCandidates.value.map((c) => c.name),
+                ]),
+              ];
+              await lookupTranslations(allTags);
+            }
+          }
+          function batchRemoveTag(index) {
+            batchReviewTags.value.splice(index, 1);
+          }
+          function batchToggleCand(name, checked) {
+            if (checked && !batchReviewTags.value.includes(name)) {
+              batchReviewTags.value.push(name);
+            } else if (!checked) {
+              const i = batchReviewTags.value.indexOf(name);
+              if (i >= 0) batchReviewTags.value.splice(i, 1);
+            }
+          }
+          function batchAddTag() {
+            const t = batchNewTag.value.trim();
+            if (t && !batchReviewTags.value.includes(t))
+              batchReviewTags.value.push(t);
+            batchNewTag.value = "";
+          }
+          function batchToggleMultiMode() {
+            if (batchMultiMode.value) {
+              batchMultiMode.value = false;
+              batchMultiSelected.value = {};
+              batchMultiTags.value = [];
+              batchMultiSelectedTags.value = {};
+            } else {
+              saveCurrentBatchReview();
+              batchMultiMode.value = true;
+              batchReviewImage.value = null;
+              batchReviewTags.value = [];
+              batchMultiSelected.value = {};
+              batchMultiTags.value = [];
+              batchMultiSelectedTags.value = {};
+            }
+          }
+          function batchMultiSelectAll() {
+            const obj = {};
+            batchImages.value.forEach((img) => {
+              obj[img.path] = true;
+            });
+            batchMultiSelected.value = obj;
+            computeBatchMultiTags();
+          }
+          function batchMultiDeselectAll() {
+            batchMultiSelected.value = {};
+            batchMultiTags.value = [];
+            batchMultiSelectedTags.value = {};
+          }
+          function computeBatchMultiTags() {
+            const selectedPaths = Object.keys(batchMultiSelected.value).filter(
+              (k) => batchMultiSelected.value[k]
+            );
+            if (!selectedPaths.length) {
+              batchMultiTags.value = [];
+              batchMultiSelectedTags.value = {};
+              return;
+            }
+            // 统计候选频率
+            const counter = {};
+            for (const path of selectedPaths) {
+              const result = batchResults.value[path];
+              if (!result) continue;
+              const probs = result.tag_probs || {};
+              // 候选标签
+              for (const tag of Object.keys(probs)) {
+                counter[tag] = (counter[tag] || 0) + 1;
+              }
+              // 已用非候选
+              for (const tag of result.tags) {
+                if (!(tag in probs)) {
+                  counter[tag] = (counter[tag] || 0) + 1;
+                }
+              }
+            }
+            batchMultiTags.value = Object.entries(counter)
+              .map(([name, count]) => ({ name, count }))
+              .sort((a, b) => b.count - a.count);
+            batchMultiSelectedTags.value = {};
+          }
+          function batchToggleTag(tagName) {
+            const next = { ...batchMultiSelectedTags.value };
+            if (next[tagName]) delete next[tagName];
+            else next[tagName] = true;
+            batchMultiSelectedTags.value = next;
+          }
+          function applyMultiTagsToSelected() {
+            const selectedPaths = Object.keys(batchMultiSelected.value).filter(
+              (k) => batchMultiSelected.value[k]
+            );
+            const selectedTagNames = Object.keys(
+              batchMultiSelectedTags.value
+            ).filter((k) => batchMultiSelectedTags.value[k]);
+            if (!selectedPaths.length || !selectedTagNames.length) {
+              showToast("请选择图片和标签");
+              return;
+            }
+            // 添加勾选标签
+            const newResults = { ...batchResults.value };
+            let totalAdded = 0;
+            for (const path of selectedPaths) {
+              const result = newResults[path];
+              if (!result) continue;
+              const probs = result.tag_probs || {};
+              const newTags = [...result.tags];
+              for (const tag of selectedTagNames) {
+                // 添加未应用候选
+                if (
+                  !newTags.includes(tag) &&
+                  (tag in probs || result.tags.includes(tag))
+                ) {
+                  newTags.push(tag);
+                  totalAdded++;
+                }
+              }
+              newResults[path] = { ...result, tags: newTags };
+            }
+            batchResults.value = newResults;
+            computeBatchMultiTags();
+          }
+          // 移除勾选标签
+          function batchMultiClearTagsFromSelected() {
+            const selectedPaths = Object.keys(batchMultiSelected.value).filter(
+              (k) => batchMultiSelected.value[k]
+            );
+            const selectedTagNames = Object.keys(
+              batchMultiSelectedTags.value
+            ).filter((k) => batchMultiSelectedTags.value[k]);
+            if (!selectedPaths.length || !selectedTagNames.length) {
+              showToast("请选择图片和标签");
+              return;
+            }
+            const newResults = { ...batchResults.value };
+            for (const path of selectedPaths) {
+              const result = newResults[path];
+              if (!result) continue;
+              const newTags = result.tags.filter(
+                (t) => !selectedTagNames.includes(t)
+              );
+              newResults[path] = { ...result, tags: newTags };
+            }
+            batchResults.value = newResults;
+            computeBatchMultiTags();
+            batchMultiSelectedTags.value = {};
+          }
+          // 阈值勾选标签
+          function batchMultiAddTagsByProb(threshold) {
+            const selectedPaths = Object.keys(batchMultiSelected.value).filter(
+              (k) => batchMultiSelected.value[k]
+            );
+            if (!selectedPaths.length) {
+              showToast("请先选择图片");
+              return;
+            }
+            // 收集阈值标签
+            const tagsToSelect = new Set();
+            for (const path of selectedPaths) {
+              const result = batchResults.value[path];
+              if (!result) continue;
+              const probs = result.tag_probs || {};
+              for (const [tag, prob] of Object.entries(probs)) {
+                if (threshold === 0 || prob >= threshold) {
+                  tagsToSelect.add(tag);
+                }
+              }
+            }
+            // 替换勾选
+            const newSelected = {};
+            for (const tag of tagsToSelect) {
+              newSelected[tag] = true;
+            }
+            batchMultiSelectedTags.value = newSelected;
+          }
+          // 清多选勾选
+          function batchMultiClearSelection() {
+            batchMultiSelectedTags.value = {};
+          }
+          async function batchTranslateTags() {
+            let allTags = [];
+            if (batchMultiMode.value) {
+              allTags = batchMultiTags.value.map((t) => t.name);
+            } else {
+              // 翻译单张标签
+              allTags = [
+                ...new Set([
+                  ...batchReviewTags.value,
+                  ...batchCandidates.value.map((c) => c.name),
+                ]),
+              ];
+            }
+            if (!allTags.length) return;
+            await lookupTranslations(allTags);
+            const untranslated = allTags.filter(
+              (t) => !globalTranslations.value[t]
+            );
+            if (!untranslated.length) {
+              batchShowTranslated.value = true;
+              return;
+            }
+            batchTranslating.value = true;
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags: untranslated }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "翻译失败");
+              globalTranslations.value = {
+                ...globalTranslations.value,
+                ...data.translations,
+              };
+              batchShowTranslated.value = true;
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              batchTranslating.value = false;
+            }
+          }
+          async function saveBatchResults() {
+            saveCurrentBatchReview();
+            const paths = Object.keys(batchResults.value);
+            if (!paths.length) {
+              exitBatchReview();
+              return;
+            }
+            let saved = 0;
+            for (const path of paths) {
+              const result = batchResults.value[path];
+              try {
+                await fetch("/api/tags", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ path, tags: result.tags }),
+                });
+                saved++;
+                const img = images.value.find((i) => i.path === path);
+                if (img) img.has_tags = result.tags.length > 0;
+              } catch (e) {}
+            }
+            exitBatchReview();
+          }
+          function discardBatchResults() {
+            exitBatchReview();
+          }
+          function exitBatchReview() {
+            batchReviewMode.value = false;
+            batchResults.value = {};
+            batchReviewImage.value = null;
+            batchReviewTags.value = [];
+            batchMultiMode.value = false;
+            batchMultiSelected.value = {};
+            batchMultiTags.value = [];
+            batchMultiSelectedTags.value = {};
+            batchNewTag.value = "";
+            batchCandidates.value = [];
+            batchShowTranslated.value = false;
+            batchTranslating.value = false;
+            batchInferring.value = false;
+            batchSelectedTags.value = {};
+            batchTagEditMode.value = false;
+            batchPendingDeletions.value = {};
+            batchShowStatsTranslated.value = false;
+            batchTranslatingStats.value = false;
+          }
+          // 审核标签管理
+          function toggleBatchTagFilter(tagName) {
+            const next = { ...batchSelectedTags.value };
+            if (next[tagName]) delete next[tagName];
+            else next[tagName] = true;
+            batchSelectedTags.value = next;
+          }
+          function cancelBatchTagEdit() {
+            batchTagEditMode.value = false;
+            batchPendingDeletions.value = {};
+          }
+          function toggleBatchPendingDelete(tagName) {
+            const next = { ...batchPendingDeletions.value };
+            if (next[tagName]) delete next[tagName];
+            else next[tagName] = true;
+            batchPendingDeletions.value = next;
+          }
+          function confirmBatchTagDeletions() {
+            const tagsToDelete = Object.keys(
+              batchPendingDeletions.value
+            ).filter((k) => batchPendingDeletions.value[k]);
+            if (!tagsToDelete.length) return;
+            const newResults = { ...batchResults.value };
+            for (const [path, result] of Object.entries(newResults)) {
+              const newTags = (result.tags || []).filter(
+                (t) => !tagsToDelete.includes(t)
+              );
+              newResults[path] = { ...result, tags: newTags };
+            }
+            batchResults.value = newResults;
+            batchPendingDeletions.value = {};
+            batchTagEditMode.value = false;
+            const newSelected = { ...batchSelectedTags.value };
+            for (const tagName of tagsToDelete) {
+              if (newSelected[tagName]) delete newSelected[tagName];
+            }
+            batchSelectedTags.value = newSelected;
+          }
+          async function translateBatchStatsTags() {
+            const allTags = batchTagStats.value.map((t) => t.name);
+            if (!allTags.length) return;
+            await lookupTranslations(allTags);
+            const untranslated = allTags.filter(
+              (t) => !globalTranslations.value[t]
+            );
+            if (!untranslated.length) {
+              batchShowStatsTranslated.value = true;
+              return;
+            }
+            batchTranslatingStats.value = true;
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags: untranslated }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "翻译失败");
+              globalTranslations.value = {
+                ...globalTranslations.value,
+                ...data.translations,
+              };
+              batchShowStatsTranslated.value = true;
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              batchTranslatingStats.value = false;
+            }
+          }
+          // 工作目录
+          async function loadWorkspace() {
+            try {
+              const r = await fetch("/api/workspace");
+              const d = await r.json();
+              defaultWorkspace.value = d.path || "";
+              workspaceNavPath.value = "";
+              if (defaultWorkspace.value) {
+                await loadWorkspaceFolders();
+                workspaceView.value = true;
+              }
+            } catch (e) {}
+          }
+          async function loadWorkspaceFolders() {
+            await loadSubFolders(null);
+          }
+          async function loadSubFolders(path) {
+            workspaceLoading.value = true;
+            try {
+              const url =
+                "/api/workspace/folders" +
+                (path ? "?path=" + encodeURIComponent(path) : "");
+              const r = await fetch(url);
+              const d = await r.json();
+              workspaceFolders.value = d.folders || [];
+              // 扫描当前图片
+              const scanFolder = path || defaultWorkspace.value;
+              if (scanFolder) {
+                folder.value = scanFolder;
+                try {
+                  const sr = await fetch(
+                    "/api/scan?folder=" + encodeURIComponent(scanFolder)
+                  );
+                  const sd = await sr.json();
+                  images.value = sd.images || [];
+                } catch (e) {
+                  images.value = [];
+                }
+              }
+            } catch (e) {
+              showToast("加载文件夹失败：" + e.message);
+            } finally {
+              workspaceLoading.value = false;
+            }
+          }
+          async function saveWorkspace(path) {
+            console.log("[workspace] saveWorkspace called, path:", path);
+            try {
+              const res = await fetch("/api/workspace", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path }),
+              });
+              console.log("[workspace] POST status:", res.status);
+              defaultWorkspace.value = path;
+              workspaceNavPath.value = "";
+              await loadWorkspaceFolders();
+              console.log(
+                "[workspace] folders loaded:",
+                workspaceFolders.value.length,
+                "items"
+              );
+              workspaceView.value = true;
+            } catch (e) {
+              console.error("[workspace] saveWorkspace error:", e);
+              showToast("设置失败：" + e.message);
+            }
+          }
+          async function clearWorkspace() {
+            try {
+              await fetch("/api/workspace", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ path: "" }),
+              });
+              defaultWorkspace.value = "";
+              workspaceView.value = false;
+              workspaceNavPath.value = "";
+              workspaceFolders.value = [];
+            } catch (e) {
+              showToast("清除失败：" + e.message);
+            }
+          }
+          function selectWorkspace() {
+            openBrowser("workspace");
+          }
+          async function enterWorkspaceFolder(folderPath) {
+            workspaceLoading.value = true;
+            // 子文件夹
+            let subFolders = [];
+            try {
+              const r = await fetch(
+                "/api/workspace/folders?path=" + encodeURIComponent(folderPath)
+              );
+              const d = await r.json();
+              subFolders = d.folders || [];
+            } catch (e) {}
+            // 重置状态
+            selectedPaths.value = {};
+            tagStats.value = [];
+            selectedTags.value = {};
+            imageTagsMap.value = {};
+            highlightTags.value = [];
+            batchSelectMode.value = false;
+            batchSelectedPaths.value = {};
+            manageMode.value = false;
+            // 扫描图片
+            folder.value = folderPath;
+            scanning.value = true;
+            try {
+              const r = await fetch(
+                "/api/scan?folder=" + encodeURIComponent(folderPath)
+              );
+              const d = await r.json();
+              images.value = d.images || [];
+            } catch (e) {
+              images.value = [];
+            }
+            scanning.value = false;
+            workspaceLoading.value = false;
+            if (subFolders.length > 0) {
+              // 有子文件夹
+              workspaceNavPath.value = folderPath;
+              workspaceFolders.value = subFolders;
+              workspaceView.value = true;
+            } else {
+              // 无子文件夹
+              workspaceView.value = false;
+            }
+          }
+          function backToWorkspace() {
+            workspaceView.value = true;
+            images.value = [];
+            folder.value = "";
+            selectedPaths.value = {};
+            tagStats.value = [];
+            selectedTags.value = {};
+            imageTagsMap.value = {};
+            highlightTags.value = [];
+            batchSelectMode.value = false;
+            batchSelectedPaths.value = {};
+            manageMode.value = false;
+            // 返回当前层
+            loadSubFolders(workspaceNavPath.value || null);
+          }
+          async function backToParentFolder() {
+            if (!workspaceNavPath.value) return;
+            // 上级路径
+            let idx = workspaceNavPath.value.lastIndexOf("\\");
+            if (idx < 0) idx = workspaceNavPath.value.lastIndexOf("/");
+            if (idx <= 2) return;
+            const parent = workspaceNavPath.value.substring(0, idx);
+            // 判断根目录
+            const norm = (p) =>
+              p.replace(/\\/g, "/").replace(/\/$/, "").toLowerCase();
+            if (norm(parent) === norm(defaultWorkspace.value)) {
+              workspaceNavPath.value = "";
+              await loadSubFolders(null);
+            } else {
+              workspaceNavPath.value = parent;
+              await loadSubFolders(parent);
+            }
+          }
+
+          // 标签编辑
+          async function openEditor(img) {
+            current.value = img;
+            editorTags.value = [];
+            candidates.value = [];
+            editorTagProbs.value = {};
+            newTag.value = "";
+            // 高亮标签
+            highlightTags.value = manageMode.value
+              ? [...selectedTagNames.value]
+              : [];
+            editorOpen.value = true;
+            try {
+              const r = await fetch(
+                "/api/tags?path=" + encodeURIComponent(img.path)
+              );
+              const d = await r.json();
+              editorTags.value = d.tags;
+              // 查翻译
+              await lookupTranslations(d.tags);
+              if (d.tags.some((t) => globalTranslations.value[t])) {
+                showTranslated.value = true;
+              }
+            } catch (e) {
+              showToast("读取标签失败");
+            }
+          }
+          function addTag() {
+            const t = newTag.value.trim();
+            if (t && !editorTags.value.includes(t)) editorTags.value.push(t);
+            newTag.value = "";
+          }
+          function toggleCand(name, checked) {
+            if (checked && !editorTags.value.includes(name)) {
+              editorTags.value.push(name);
+              // 记录置信度
+              const cand = candidates.value.find((c) => c.name === name);
+              if (cand) {
+                editorTagProbs.value = {
+                  ...editorTagProbs.value,
+                  [name]: cand.prob,
+                };
+              }
+            } else if (!checked) {
+              const i = editorTags.value.indexOf(name);
+              if (i >= 0) editorTags.value.splice(i, 1);
+            }
+          }
+          // 阈值替换候选
+          function addTagsByProb(threshold) {
+            const candNames = new Set(candidates.value.map((c) => c.name));
+            // 保留非候选
+            const fixed = editorTags.value.filter((t) => !candNames.has(t));
+            // 保留阈值内
+            const matching = candidates.value
+              .filter((c) => c.prob >= threshold)
+              .map((c) => c.name);
+            editorTags.value = [...fixed, ...matching];
+            // 更新置信度
+            const newProbs = {};
+            for (const c of candidates.value) {
+              if (editorTags.value.includes(c.name)) {
+                newProbs[c.name] = c.prob;
+              }
+            }
+            editorTagProbs.value = newProbs;
+          }
+          async function reInfer() {
+            if (!current.value) return;
+            inferring.value = true;
+            try {
+              const r = await fetch(
+                "/api/tag/single?path=" +
+                  encodeURIComponent(current.value.path) +
+                  "&top_n=60"
+              );
+              const d = await r.json();
+              candidates.value = d.candidates;
+              // 构建置信度
+              const probs = {};
+              for (const c of d.candidates) {
+                probs[c.name] = c.prob;
+              }
+              editorTagProbs.value = probs;
+              // 插入固定标签
+              const tr = trigger.value.trim();
+              const pfx = prefix.value.trim();
+              const fixedTags = [];
+              if (tr) fixedTags.push(tr);
+              if (pfx) {
+                pfx.split(",").forEach((s) => {
+                  const t = s.trim();
+                  if (t && !fixedTags.includes(t)) fixedTags.push(t);
+                });
+              }
+              const toAdd = fixedTags.filter(
+                (t) => !editorTags.value.includes(t)
+              );
+              if (toAdd.length) {
+                editorTags.value = [...toAdd, ...editorTags.value];
+              }
+            } catch (e) {
+              showToast("识别失败：" + e.message);
+            }
+            inferring.value = false;
+          }
+          async function saveTags() {
+            try {
+              await fetch("/api/tags", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  path: current.value.path,
+                  tags: editorTags.value,
+                }),
+              });
+              const img = images.value.find(
+                (i) => i.path === current.value.path
+              );
+              if (img) img.has_tags = editorTags.value.length > 0;
+              // 同步标签映射
+              if (manageMode.value) {
+                imageTagsMap.value = {
+                  ...imageTagsMap.value,
+                  [current.value.path]: [...editorTags.value],
+                };
+              }
+            } catch (e) {
+              showToast("保存失败：" + e.message);
+            }
+          }
+          async function translateStatsTags() {
+            if (!tagStats.value.length) return;
+            // 先查翻译
+            await lookupTranslations(tagStats.value.map((t) => t.name));
+            // 翻译缺失标签
+            const untranslated = tagStats.value
+              .map((t) => t.name)
+              .filter((name) => !globalTranslations.value[name]);
+            if (!untranslated.length) {
+              return;
+            }
+            translatingStats.value = true;
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags: untranslated }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "翻译失败");
+              // 合并缓存
+              globalTranslations.value = {
+                ...globalTranslations.value,
+                ...data.translations,
+              };
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              translatingStats.value = false;
+            }
+          }
+          async function loadTranslateConfig() {
+            try {
+              const res = await fetch("/api/translate/config");
+              const d = await res.json();
+              trProvider.value = d.provider || "openai";
+              // 还原 endpoint
+              trEndpoint.value = stripSuffix(
+                d.endpoint || "",
+                d.provider || "openai"
+              );
+              trApiKey.value = d.api_key || "";
+              trModel.value = d.model || "";
+              trPrompt.value = d.prompt || "";
+            } catch (e) {}
+          }
+
+          async function saveTranslateConfig() {
+            try {
+              const body = JSON.stringify({
+                provider: trProvider.value,
+                endpoint: getFullEndpoint(),
+                api_key: trApiKey.value,
+                model: trModel.value,
+                prompt: trPrompt.value,
+              });
+              const res = await fetch("/api/translate/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: body,
+              });
+              if (res.ok) {
+                translateOpen.value = false;
+              } else {
+                showToast("保存失败");
+              }
+            } catch (e) {
+              showToast("保存失败：" + e.message);
+            }
+          }
+
+          async function detectModels() {
+            detecting.value = true;
+            trModels.value = [];
+            try {
+              // 先保存配置
+              const saveBody = JSON.stringify({
+                provider: trProvider.value,
+                endpoint: getFullEndpoint(),
+                api_key: trApiKey.value,
+                model: trModel.value,
+                prompt: trPrompt.value,
+              });
+              await fetch("/api/translate/config", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: saveBody,
+              });
+              const res = await fetch("/api/translate/models");
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "检测失败");
+              trModels.value = data.models || [];
+              if (trModels.value.length === 0) {
+                showToast("未检测到可用模型");
+              }
+            } catch (e) {
+              showToast("检测失败：" + e.message);
+            } finally {
+              detecting.value = false;
+            }
+          }
+
+          function onProviderChange() {
+            const defaults = {
+              openai: {
+                endpoint: "https://api.openai.com",
+                model: "gpt-4o-mini",
+              },
+              "openai-response": {
+                endpoint: "https://api.openai.com",
+                model: "gpt-4o-mini",
+              },
+              gemini: {
+                endpoint: "https://generativelanguage.googleapis.com",
+                model: "gemini-2.0-flash",
+              },
+              anthropic: {
+                endpoint: "https://api.anthropic.com",
+                model: "claude-sonnet-4-20250514",
+              },
+              azure: {
+                endpoint:
+                  "https://你的资源名.openai.azure.com/openai/deployments/你的部署名/chat/completions?api-version=2024-02-15-preview",
+                model: "gpt-4o-mini",
+              },
+              "new-api": {
+                endpoint: "https://你的API地址",
+                model: "gpt-4o-mini",
+              },
+              cherryin: {
+                endpoint: "https://api.cherryin.ai",
+                model: "gpt-4o-mini",
+              },
+              ollama: {
+                endpoint: "http://localhost:11434",
+                model: "llama3.1",
+              },
+            };
+            const d = defaults[trProvider.value];
+            if (d) {
+              trEndpoint.value = d.endpoint;
+              trModel.value = d.model;
+            }
+            trModels.value = [];
+          }
+
+          async function translateTags() {
+            if (!editorTags.value.length) return;
+            // 先查翻译
+            await lookupTranslations(editorTags.value);
+            // 翻译缺失标签
+            const untranslated = editorTags.value.filter(
+              (t) => !globalTranslations.value[t]
+            );
+            if (!untranslated.length) {
+              showTranslated.value = true;
+              return;
+            }
+            translating.value = true;
+            try {
+              const res = await fetch("/api/translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tags: untranslated }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "翻译失败");
+              // 合并缓存
+              globalTranslations.value = {
+                ...globalTranslations.value,
+                ...data.translations,
+              };
+              showTranslated.value = true;
+            } catch (e) {
+              showToast("翻译失败：" + e.message);
+            } finally {
+              translating.value = false;
+            }
+          }
+
+          function clearTags() {
+            editorTags.value = [];
+          }
+
+          // 标签管理
+          function toggleManageMode() {
+            manageMode.value = !manageMode.value;
+            if (!manageMode.value) {
+              selectedPaths.value = {};
+              tagStats.value = [];
+              selectedTags.value = {};
+              imageTagsMap.value = {};
+              highlightTags.value = [];
+              tagEditMode.value = false;
+              tagEditWarning.value = false;
+              pendingTagDeletions.value = {};
+            }
+          }
+          function toggleSelect(path) {
+            const next = { ...selectedPaths.value };
+            if (next[path]) delete next[path];
+            else next[path] = true;
+            selectedPaths.value = next;
+            if (Object.keys(next).filter((k) => next[k]).length > 0) {
+              loadTagStats();
+            } else {
+              tagStats.value = [];
+              imageTagsMap.value = {};
+              selectedTags.value = {};
+            }
+          }
+          function selectAll() {
+            const obj = {};
+            (selectedTagNames.value.length
+              ? filteredImages.value
+              : images.value
+            ).forEach((img) => {
+              obj[img.path] = true;
+            });
+            selectedPaths.value = obj;
+            loadTagStats();
+          }
+          function deselectAll() {
+            selectedPaths.value = {};
+            tagStats.value = [];
+            imageTagsMap.value = {};
+            selectedTags.value = {};
+          }
+          async function loadTagStats() {
+            const paths = Object.keys(selectedPaths.value).filter(
+              (k) => selectedPaths.value[k]
+            );
+            if (!paths.length) return;
+            tagStatsLoading.value = true;
+            selectedTags.value = {};
+            try {
+              const res = await fetch("/api/tags/stats", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ paths }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.detail || "统计失败");
+              tagStats.value = data.tags;
+              imageTagsMap.value = data.image_tags;
+              // 查翻译
+              await lookupTranslations(data.tags.map((t) => t.name));
+            } catch (e) {
+              showToast("统计失败：" + e.message);
+            } finally {
+              tagStatsLoading.value = false;
+            }
+          }
+          // 批量编辑
+          function showTagEditWarning() {
+            tagEditWarning.value = true;
+          }
+          function confirmTagEdit() {
+            tagEditWarning.value = false;
+            tagEditMode.value = true;
+          }
+          function cancelTagEdit() {
+            tagEditWarning.value = false;
+            tagEditMode.value = false;
+            pendingTagDeletions.value = {};
+          }
+          function togglePendingDelete(tagName) {
+            const next = { ...pendingTagDeletions.value };
+            if (next[tagName]) delete next[tagName];
+            else next[tagName] = true;
+            pendingTagDeletions.value = next;
+          }
+          async function confirmTagDeletions() {
+            const tagsToDelete = Object.keys(pendingTagDeletions.value).filter(
+              (k) => pendingTagDeletions.value[k]
+            );
+            if (!tagsToDelete.length) return;
+            try {
+              const paths = Object.keys(imageTagsMap.value);
+              const newImageTags = { ...imageTagsMap.value };
+              for (const path of paths) {
+                const tags = newImageTags[path] || [];
+                const hasAny = tagsToDelete.some((t) => tags.includes(t));
+                if (hasAny) {
+                  const newTags = tags.filter((t) => !tagsToDelete.includes(t));
+                  newImageTags[path] = newTags;
+                  await fetch("/api/tags", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ path, tags: newTags }),
+                  });
+                }
+              }
+              imageTagsMap.value = newImageTags;
+              tagStats.value = tagStats.value.filter(
+                (t) => !pendingTagDeletions.value[t.name]
+              );
+              const newSelected = { ...selectedTags.value };
+              for (const tagName of tagsToDelete) {
+                if (newSelected[tagName]) delete newSelected[tagName];
+              }
+              selectedTags.value = newSelected;
+              for (const path of paths) {
+                const img = images.value.find((i) => i.path === path);
+                if (img) {
+                  const tags = newImageTags[path] || [];
+                  img.has_tags = tags.length > 0;
+                  img.tag_count = tags.length;
+                }
+              }
+              pendingTagDeletions.value = {};
+              tagEditMode.value = false;
+            } catch (e) {
+              showToast("删除失败：" + e.message);
+            }
+          }
+          function toggleTagFilter(tagName) {
+            const next = { ...selectedTags.value };
+            if (next[tagName]) delete next[tagName];
+            else next[tagName] = true;
+            selectedTags.value = next;
+          }
+          function onCardClick(img) {
+            if (batchSelectMode.value) {
+              batchToggleSelect(img.path);
+            } else if (
+              manageMode.value &&
+              selectedTagNames.value.length === 0
+            ) {
+              toggleSelect(img.path);
+            } else {
+              openEditor(img);
+            }
+          }
+
+          onMounted(() => {
+            checkModel();
+            loadTranslateConfig();
+            loadWorkspace();
+          });
+
+          return {
+            folder,
+            images,
+            scanning,
+            trigger,
+            generalThreshold,
+            characterThreshold,
+            prefix,
+            normalizeFormat,
+            includeCharacter,
+            overwrite,
+            modelText,
+            models,
+            activeId,
+            manageOpen,
+            detectOpen,
+            detectResults,
+            addModel,
+            doAddModel,
+            switchModel,
+            deleteModel,
+            canBatch,
+            startBatchTag,
+            browserOpen,
+            browserPath,
+            browserParent,
+            browserDirs,
+            browserMode,
+            openBrowser,
+            browseTo,
+            pickCurrent,
+            scan,
+            editorOpen,
+            current,
+            editorTags,
+            newTag,
+            candidates,
+            inferring,
+            openEditor,
+            addTag,
+            toggleCand,
+            addTagsByProb,
+            editorTagProbs,
+            reInfer,
+            saveTags,
+            clearTags,
+            translateOpen,
+            trProvider,
+            trEndpoint,
+            trApiKey,
+            trModel,
+            trPrompt,
+            trModels,
+            detecting,
+            translating,
+            tagTranslations,
+            globalTranslations,
+            showTranslated,
+            getFullEndpoint,
+            loadTranslateConfig,
+            saveTranslateConfig,
+            onProviderChange,
+            detectModels,
+            translateTags,
+            toast,
+            // 标签管理
+            manageMode,
+            selectedPaths,
+            selectedCount,
+            tagStats,
+            selectedTags,
+            selectedTagNames,
+            filteredImages,
+            tagStatsLoading,
+            imageTagsMap,
+            highlightTags,
+            toggleManageMode,
+            toggleSelect,
+            selectAll,
+            deselectAll,
+            loadTagStats,
+            toggleTagFilter,
+            onCardClick,
+            translatingStats,
+            translateStatsTags,
+            // 统计翻译切换
+            showStatsTranslated,
+            // 批量编辑
+            tagEditWarning,
+            tagEditMode,
+            pendingTagDeletions,
+            pendingDeleteCount,
+            showTagEditWarning,
+            confirmTagEdit,
+            cancelTagEdit,
+            togglePendingDelete,
+            confirmTagDeletions,
+            // 工作目录
+            defaultWorkspace,
+            workspaceView,
+            workspaceFolders,
+            workspaceLoading,
+            selectWorkspace,
+            clearWorkspace,
+            enterWorkspaceFolder,
+            backToWorkspace,
+            backToParentFolder,
+            workspaceNavPath,
+            // 词库
+            dictOpen,
+            dictSearch,
+            dictItems,
+            dictTotal,
+            dictPage,
+            dictPageSize,
+            dictLoading,
+            openDict,
+            loadDict,
+            deleteDictItem,
+            dictNext,
+            dictPrev,
+            dictSearchInput,
+            dictEditKey,
+            dictEditEn,
+            dictEditZh,
+            startEditDict,
+            saveEditDict,
+            cancelEditDict,
+            exportDict,
+            importDict,
+            importModeOpen,
+            importConfirmOpen,
+            importConfirmText,
+            chooseImportMerge,
+            chooseImportOverwrite,
+            cancelImportMode,
+            cancelImportConfirm,
+            confirmOverwriteImport,
+            // 翻译工作目录
+            translatingWs,
+            translateWorkspace,
+            // 候选翻译
+            showCandTranslated,
+            translatingCands,
+            translateCandidates,
+            // 取消翻译
+            cancelTranslate,
+            // 翻译进度
+            progressOpen,
+            progressItems,
+            openProgress,
+            closeProgress,
+            // 批量打标审核
+            batchSelectMode,
+            batchSelectedPaths,
+            batchSelectedCount,
+            batchTagging,
+            batchProgressIndex,
+            batchProgressTotal,
+            batchProgressName,
+            batchProgressPct,
+            batchReviewMode,
+            batchResults,
+            batchImages,
+            batchReviewImage,
+            batchReviewTags,
+            batchNewTag,
+            batchMultiMode,
+            batchMultiSelected,
+            batchMultiSelectedCount,
+            batchMultiTags,
+            batchMultiSelectedTags,
+            batchShowTranslated,
+            batchTranslating,
+            batchCandidates,
+            batchInferring,
+            batchReInfer,
+            batchAddTagsByProb,
+            batchClearTagsByProb,
+            batchMultiClearSelection,
+            batchHasCandTags,
+            batchMultiSelectedTagCount,
+            batchHasUntranslated,
+            batchSelectAll,
+            batchDeselectAll,
+            batchToggleSelect,
+            cancelBatchSelect,
+            confirmBatchSelect,
+            batchReviewClickImage,
+            batchRemoveTag,
+            batchToggleCand,
+            batchAddTag,
+            batchToggleMultiMode,
+            batchMultiSelectAll,
+            batchMultiDeselectAll,
+            batchToggleTag,
+            applyMultiTagsToSelected,
+            batchMultiClearTagsFromSelected,
+            batchMultiAddTagsByProb,
+            batchTranslateTags,
+            saveBatchResults,
+            discardBatchResults,
+            batchTagStats,
+            batchSelectedTags,
+            batchTagEditMode,
+            batchPendingDeletions,
+            batchPendingDeleteCount,
+            batchShowStatsTranslated,
+            batchTranslatingStats,
+            batchFilteredImages,
+            batchStatsHasUntranslated,
+            batchHasChanges,
+            toggleBatchTagFilter,
+            cancelBatchTagEdit,
+            toggleBatchPendingDelete,
+            confirmBatchTagDeletions,
+            translateBatchStatsTags,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
