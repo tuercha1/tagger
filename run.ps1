@@ -1,4 +1,4 @@
-$Host.UI.RawUI.WindowTitle = "Anima Tagger"
+﻿$Host.UI.RawUI.WindowTitle = "Anima Tagger"
 
 $HostName = "127.0.0.1"
 $Port = 7860
@@ -36,7 +36,7 @@ function Find-Python311 {
     if ($cmd) {
         & py -3.11 --version *> $null
         if ($LASTEXITCODE -eq 0) {
-            return ,@("py", "-3.11")
+            return [pscustomobject]@{ Exe = "py"; Args = @("-3.11") }
         }
     }
 
@@ -44,7 +44,7 @@ function Find-Python311 {
     if ($uv) {
         $found = (& uv python find 3.11 2>$null | Select-Object -First 1)
         if ($found -and (Test-Path -LiteralPath $found)) {
-            return ,@($found)
+            return [pscustomobject]@{ Exe = $found; Args = @() }
         }
     }
 
@@ -52,7 +52,7 @@ function Find-Python311 {
     if ($python) {
         $version = (& python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null)
         if ($version -eq "3.11") {
-            return ,@("python")
+            return [pscustomobject]@{ Exe = "python"; Args = @() }
         }
     }
 
@@ -73,7 +73,7 @@ if (-not (Test-Path -LiteralPath (Join-Path $Backend "main.py"))) {
 Tag "[后端] OK" Green
 
 if (-not (Test-Path -LiteralPath $VenvPython)) {
-    $python311 = @(Find-Python311)
+    $python311 = Find-Python311
     if (-not $python311) {
         Tag "[Python] ERROR" Red
         Tag "需要 Python 3.11。请安装 Python 3.11 后重试。" Red
@@ -81,11 +81,9 @@ if (-not (Test-Path -LiteralPath $VenvPython)) {
         exit 1
     }
     Tag "[虚拟环境] 创建" Cyan
-    if ($python311.Count -gt 1) {
-        & $python311[0] $python311[1] -m venv (Join-Path $Root ".venv")
-    } else {
-        & $python311[0] -m venv (Join-Path $Root ".venv")
-    }
+    $PythonExe = $python311.Exe
+    $PythonArgs = $python311.Args
+    & $PythonExe @PythonArgs -m venv (Join-Path $Root ".venv")
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $VenvPython)) {
         Tag "[虚拟环境] ERROR" Red
         Read-Host
